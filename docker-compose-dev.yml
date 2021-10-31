@@ -12,6 +12,7 @@ services:
       - PORT=8000
       - redis
       - api
+      - DEBUG=True
     volumes:
       - .:/app
 

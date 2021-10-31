@@ -1,11 +1,16 @@
 import dash
 from dash import dcc
 from dash import html
+from fastapi import FastAPI
+from starlette.middleware.wsgi import WSGIMiddleware
 import plotly.express as px
 import pandas as pd
+import uvicorn as uvicorn
 from stock_market_visualizer.app.config import get_settings
 
-app = dash.Dash(__name__)
+app = dash.Dash(__name__, requests_pathname_prefix="/dash/")
+server = FastAPI()
+server.mount("/dash", WSGIMiddleware(app.server))
 
 # assume you have a "long-form" data frame
 # see https://plotly.com/python/px-arguments/ for more options
@@ -18,7 +23,7 @@ df = pd.DataFrame({
 fig = px.bar(df, x="Fruit", y="Amount", color="City", barmode="group")
 
 app.layout = html.Div(children=[
-    html.H1(children='Hello Dash'),
+    html.H1(children='Stock Market Engine'),
 
     html.Div(children='''
         Dash: A web application framework for your data.
@@ -32,4 +37,9 @@ app.layout = html.Div(children=[
 
 if __name__ == '__main__':
     settings = get_settings()
-    app.run_server(host=settings.host_url, port=settings.port, debug=settings.debug)
+    uvicorn.run("main:server",
+                host=settings.host_url,
+                port=settings.port,
+                reload=settings.debug,
+                log_level='warning',
+                use_colors=True)

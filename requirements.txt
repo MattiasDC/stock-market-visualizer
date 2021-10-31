@@ -1,7 +1,10 @@
 wheel
 aioredis
 dash
+fastapi
 pandas
 plotly
 pydantic
+starlette
 rich
+uvicorn
