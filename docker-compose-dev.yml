@@ -1,0 +1,35 @@
+version: '3.7'
+
+services:
+  stock-market-visualizer:
+    container_name: stock-market-visualizer
+    build: .
+    command: python stock_market_visualizer/app/main.py
+    ports:
+      - 8000:8000
+    environment:
+      - HOST_URL=0.0.0.0
+      - PORT=8000
+      - redis
+      - api
+    volumes:
+      - .:/app
+
+  api:
+    container_name: sme-api-smv
+    image: sme-api
+    command: [sh, -cx, "
+      uvicorn stock_market_engine.api.main:app
+      --host 0.0.0.0 --port 8001
+      --lifespan=on --use-colors --log-level debug"]
+    ports:
+      - 8001:8001
+    depends_on:
+      - redis
+      
+  redis:
+    container_name: redis-smv
+    image: redis:alpine
+    restart: always
+    ports:
+      - 6379:6379

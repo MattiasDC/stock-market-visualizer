@@ -1,0 +1,7 @@
+wheel
+aioredis
+dash
+pandas
+plotly
+pydantic
+rich
