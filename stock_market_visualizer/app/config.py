@@ -11,6 +11,8 @@ class Settings(BaseSettings):
     redis_url: AnyUrl = os.environ.get("REDIS_URL", "redis://redis")
     redis_port: int = os.getenv("REDIS_PORT", 6379)
     redis_db: int = os.getenv("REDIS_DB", 0)
+    api_url: AnyUrl = os.getenv("API_URL", "http://sme-api-smv")
+    api_port: int = os.getenv("API_PORT", 8001)
     debug: bool = os.getenv("DEBUG", False)
 
 @cache

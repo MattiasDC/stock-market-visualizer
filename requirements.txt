@@ -1,5 +1,7 @@
 wheel
+aiohttp
 aioredis
+asyncio
 dash
 fastapi
 pandas

@@ -7,11 +7,10 @@ services:
     command: python stock_market_visualizer/app/main.py
     ports:
       - 8000:8000
-    environment:
-      - HOST_URL=0.0.0.0
-      - PORT=8000
+    depends_on:
       - redis
       - api
+    environment:
       - DEBUG=True
     volumes:
       - .:/app
@@ -19,10 +18,7 @@ services:
   api:
     container_name: sme-api-smv
     image: sme-api
-    command: [sh, -cx, "
-      uvicorn stock_market_engine.api.main:app
-      --host 0.0.0.0 --port 8001
-      --lifespan=on --use-colors --log-level debug"]
+    command: uvicorn stock_market_engine.api.main:app --host 0.0.0.0 --port 8001 --lifespan=on --use-colors --log-level debug
     ports:
       - 8001:8001
     depends_on:
