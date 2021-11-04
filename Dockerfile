@@ -1,18 +1,20 @@
-FROM python:3.9-buster
+FROM python:3.9-slim-buster
 
 RUN mkdir -p /app
 
 # set working directory
 WORKDIR /app
 
-# add requirements (to leverage Docker cache)
-COPY ./requirements.txt ./
+RUN apt-get update && apt-get install -y git
+RUN python -m pip install --no-cache-dir --upgrade pip
 
-RUN pip install --no-cache-dir --upgrade pip
-RUN pip install --no-cache-dir --upgrade -r requirements.txt
+COPY setup.py .
+COPY pyproject.toml .
+COPY setup.cfg .
 
-ENV PYTHONPATH="${PYTHONPATH}:/app"
+COPY ./stock_market_visualizer ./stock_market_visualizer
+
+RUN pip install -e . --no-cache-dir
 
 EXPOSE 8000
-COPY . .
 CMD ["python", "stock_market_visualizer/app/main.py", "--host", "0.0.0.0"]

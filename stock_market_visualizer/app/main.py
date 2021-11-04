@@ -10,18 +10,20 @@ import plotly.graph_objects as go
 import pandas as pd
 import uvicorn as uvicorn
 from stock_market_visualizer.app.config import get_settings
-from stock_market_visualizer.common.requests import ClientSessionGenerator, concat_port
-from stock_market_visualizer.common.sync_wrapper import sync_wrapper
+from stock_market_visualizer.app.sme_api import get_create_url, get_create_engine_json
+from stock_market_visualizer.common.requests import ClientSessionGenerator
 
 app = dash.Dash(__name__, requests_pathname_prefix="/sme/")
 server = FastAPI()
 server.mount("/sme", WSGIMiddleware(app.server))
 
+earliest_start = dt.date(1990, 1, 1)
+
 app.layout = html.Div(children=[
     html.H1(children='Stock Market Engine'),
      dcc.DatePickerRange(
         id='start-date',
-        min_date_allowed=dt.date(1990, 1, 1),
+        min_date_allowed=earliest_start,
         max_date_allowed=dt.datetime.now().date()
     ),
     dcc.Graph(id='stock-market-graph')
@@ -34,16 +36,15 @@ async def startup_event():
 @app.callback(
     Output('stock-market-graph', 'figure'),
     Input('start-date', 'start_date'))
-@sync_wrapper
-async def update_start_date(date_value):
+def update_start_date(start_date):
+    if start_date is None:
+        start_date = earliest_start
     settings = get_settings()
-    client = await server.state.client_generator.get()
-    url = concat_port(settings.api_url, port=settings.api_port) + "/create"
-    print(url)
-    response = await client.post(url)
+    client = server.state.client_generator.get()
+    data = get_create_engine_json(dt.date.fromisoformat(start_date), ["SPY"])
+    response = client.post(url=get_create_url(), data=data)
     fig = go.Scatter()
     return fig
-
 
 if __name__ == '__main__':
     settings = get_settings()
