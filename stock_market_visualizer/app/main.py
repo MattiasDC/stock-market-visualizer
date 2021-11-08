@@ -3,12 +3,14 @@ from dash import dcc
 from dash import html
 from dash.dependencies import Input, Output
 import datetime as dt
+from dateutil.relativedelta import relativedelta
 from fastapi import FastAPI
 from http import HTTPStatus
 from starlette.middleware.wsgi import WSGIMiddleware
 import plotly.graph_objects as go
 import pandas as pd
 import uvicorn as uvicorn
+from dash_extensions.enrich import Output, DashProxy, Input, MultiplexerTransform
 
 from stock_market_engine.core import Engine
 from stock_market_engine.common.factory import Factory
@@ -20,21 +22,35 @@ from stock_market_visualizer.app.redis_helper import init_redis_pool
 from stock_market_visualizer.app.sme_api_helper import get_create_url, get_create_engine_json
 from stock_market_visualizer.common.requests import ClientSessionGenerator
 
-app = dash.Dash(__name__, requests_pathname_prefix="/sme/")
+app = DashProxy(__name__,
+                requests_pathname_prefix="/sme/",
+                prevent_initial_callbacks=True,
+                transforms=[MultiplexerTransform()])
 app.title = "Stock Market Engine"
 server = FastAPI()
 server.mount("/sme", WSGIMiddleware(app.server))
 
 earliest_start = dt.date(1990, 1, 1)
+default_days_length = relativedelta(months=2)
 
 app.layout = html.Div(children=[
     html.H1(children='Stock Market Engine'),
-     dcc.DatePickerRange(
-        id='start-date',
+    dcc.DatePickerSingle(
+        id='date-picker-start',
         min_date_allowed=earliest_start,
-        max_date_allowed=dt.datetime.now().date()
+        max_date_allowed=dt.datetime.now().date() - dt.timedelta(days=1),
+        placeholder='Start Date',
+        display_format='D-M-Y',
     ),
-    dcc.Graph(id='stock-market-graph')
+    dcc.DatePickerSingle(
+        id='date-picker-end',
+        min_date_allowed=earliest_start+dt.timedelta(days=1),
+        max_date_allowed=dt.datetime.now().date(),
+        placeholder='End Date',
+        display_format='D-M-Y',
+    ),
+    dcc.Graph(id='stock-market-graph'),
+    dcc.Store(id='engine-id')
 ])
 
 @server.on_event("startup")
@@ -55,16 +71,25 @@ def get_engine(engine_id, redis):
         return None
     return Engine.from_json(engine_json, get_stock_updater_factory(), get_signal_detector_factory())
 
+def from_sdate(date):
+    if isinstance(date, str):
+        date = dt.date.fromisoformat(date)
+    return date
+
 @app.callback(
+    Output('engine-id', 'data'),
+    Output('date-picker-end', 'date'),
+    Output('date-picker-end', 'min_date_allowed'),
     Output('stock-market-graph', 'figure'),
-    Input('start-date', 'start_date'))
+    Input('date-picker-start', 'date'))
 def update_start_date(start_date):
     if start_date is None:
         start_date = earliest_start
+    start_date = from_sdate(start_date)
 
     client = server.state.client_generator.get()
     
-    data = get_create_engine_json(dt.date.fromisoformat(start_date), ["SPY"])
+    data = get_create_engine_json(start_date, ["SPY"])
     response = client.post(url=get_create_url(), data=data)
     if response.status_code != HTTPStatus.OK:
         return None
@@ -74,7 +99,28 @@ def update_start_date(start_date):
     engine = get_engine(engine_id, redis)
 
     fig = go.Scatter()
-    return fig
+    min_date = start_date + default_days_length
+    return engine_id, min_date, min_date, fig
+
+@app.callback(
+   Output('date-picker-end', 'min_date_allowed'),
+   Output('stock-market-graph', 'figure'),
+   Input('date-picker-end', 'date'),
+   Input('engine-id', 'data'))
+def update_engine(end_date, data):
+    redis = server.state.redis
+    engine = get_engine(data, redis)
+
+    if engine is None:
+        return
+        
+    if end_date is None:
+        end_date = engine.stock_market.start_date + default_days_length
+    end_date = from_sdate(end_date)
+
+    engine.update(end_date)
+    fig = go.Scatter()
+    return end_date, fig
 
 if __name__ == '__main__':
     settings = get_settings()
