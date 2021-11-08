@@ -66,6 +66,8 @@ def get_stock_updater_factory():
     return register_stock_updater_factories(Factory())
 
 def get_engine(engine_id, redis):
+    if engine_id is None:
+        return None
     engine_json = redis.get(engine_id)
     if engine_json is None:
         return None
@@ -75,6 +77,14 @@ def from_sdate(date):
     if isinstance(date, str):
         date = dt.date.fromisoformat(date)
     return date
+
+def create_figure(engine):
+    fig = go.Figure()
+    for ticker in engine.stock_market.tickers:
+        ohlc = engine.stock_market.ohlc(ticker)
+        if ohlc is not None:
+            fig.add_trace(go.Scatter(x=ohlc.close.dates, y=ohlc.close.values, name=ticker.symbol, mode="lines"))
+    return fig
 
 @app.callback(
     Output('engine-id', 'data'),
@@ -89,18 +99,21 @@ def update_start_date(start_date):
 
     client = server.state.client_generator.get()
     
-    data = get_create_engine_json(start_date, ["SPY"])
+    data = get_create_engine_json(start_date, ["QQQ", "SPY"])
     response = client.post(url=get_create_url(), data=data)
     if response.status_code != HTTPStatus.OK:
-        return None
+        return dash.no_update
 
     redis = server.state.redis
     engine_id = response.text.strip("\"")
     engine = get_engine(engine_id, redis)
+    if engine is None:
+        return dash.no_update
 
-    fig = go.Scatter()
+    engine.update(start_date + default_days_length)
+
     min_date = start_date + default_days_length
-    return engine_id, min_date, min_date, fig
+    return engine_id, min_date, min_date, create_figure(engine)
 
 @app.callback(
    Output('date-picker-end', 'min_date_allowed'),
@@ -112,15 +125,14 @@ def update_engine(end_date, data):
     engine = get_engine(data, redis)
 
     if engine is None:
-        return
-        
+        return dash.no_update
+
     if end_date is None:
         end_date = engine.stock_market.start_date + default_days_length
     end_date = from_sdate(end_date)
 
     engine.update(end_date)
-    fig = go.Scatter()
-    return end_date, fig
+    return end_date, create_figure(engine)
 
 if __name__ == '__main__':
     settings = get_settings()
