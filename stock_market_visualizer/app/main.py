@@ -2,8 +2,8 @@ import dash
 from dash import dcc
 from dash import html
 from dash.dependencies import Input, Output
+import dash_bootstrap_components as dbc
 import datetime as dt
-from dateutil.relativedelta import relativedelta
 from fastapi import FastAPI
 from http import HTTPStatus
 from starlette.middleware.wsgi import WSGIMiddleware
@@ -25,30 +25,43 @@ from stock_market_visualizer.common.requests import ClientSessionGenerator
 app = DashProxy(__name__,
                 requests_pathname_prefix="/sme/",
                 prevent_initial_callbacks=True,
-                transforms=[MultiplexerTransform()])
+                transforms=[MultiplexerTransform()],
+                meta_tags=[{"name": "viewport", "content": "width=device-width, initial-scale=1"}],
+                external_stylesheets=[dbc.themes.BOOTSTRAP])
 app.title = "Stock Market Engine"
+
 server = FastAPI()
 server.mount("/sme", WSGIMiddleware(app.server))
 
 earliest_start = dt.date(1990, 1, 1)
-default_days_length = relativedelta(months=2)
 
-app.layout = html.Div(children=[
+app.layout = dbc.Container(children=[
     html.H1(children='Stock Market Engine'),
-    dcc.DatePickerSingle(
-        id='date-picker-start',
-        min_date_allowed=earliest_start,
-        max_date_allowed=dt.datetime.now().date() - dt.timedelta(days=1),
-        placeholder='Start Date',
-        display_format='D-M-Y',
-    ),
-    dcc.DatePickerSingle(
-        id='date-picker-end',
-        min_date_allowed=earliest_start+dt.timedelta(days=1),
-        max_date_allowed=dt.datetime.now().date(),
-        placeholder='End Date',
-        display_format='D-M-Y',
-    ),
+    dbc.Container(
+        [
+             dbc.Row(
+                [
+                    dbc.Col(
+                        [
+                            html.P("Start"),
+                            dcc.DatePickerSingle(
+                                id='date-picker-start',
+                                min_date_allowed=earliest_start,
+                                max_date_allowed=dt.datetime.now().date() - dt.timedelta(days=1),
+                                placeholder='Start Date',
+                                display_format='D-M-Y')
+                        ]),
+                    dbc.Col(
+                        [
+                            html.P("End"),
+                            dcc.DatePickerSingle(
+                                id='date-picker-end',
+                                min_date_allowed=earliest_start+dt.timedelta(days=1),
+                                placeholder='End Date',
+                                display_format='D-M-Y')
+                        ])
+                ])
+        ]),
     dcc.Graph(id='stock-market-graph'),
     dcc.Store(id='engine-id')
 ])
@@ -78,61 +91,77 @@ def from_sdate(date):
         date = dt.date.fromisoformat(date)
     return date
 
-def create_figure(engine):
-    fig = go.Figure()
+def get_traces(engine):
+    traces = []
     for ticker in engine.stock_market.tickers:
         ohlc = engine.stock_market.ohlc(ticker)
         if ohlc is not None:
-            fig.add_trace(go.Scatter(x=ohlc.close.dates, y=ohlc.close.values, name=ticker.symbol, mode="lines"))
-    return fig
+            traces.append(dict(
+                type="scatter",
+                x=ohlc.close.dates,
+                y=ohlc.close.values,
+                name=ticker.symbol,
+                mode="lines"))
+    return traces
+
+def create_engine(start_date, tickers):
+    client = server.state.client_generator.get()
+        
+    data = get_create_engine_json(start_date, tickers)
+    response = client.post(url=get_create_url(), data=data)
+    if response.status_code != HTTPStatus.OK:
+        return None
+
+    return response.text.strip("\"")
 
 @app.callback(
     Output('engine-id', 'data'),
     Output('date-picker-end', 'date'),
-    Output('date-picker-end', 'min_date_allowed'),
     Output('stock-market-graph', 'figure'),
-    Input('date-picker-start', 'date'))
-def update_start_date(start_date):
+    Input('date-picker-start', 'date'),
+    Input('date-picker-end', 'min_date_allowed'),
+    Input('date-picker-end', 'date'),
+    Input('engine-id', 'data'))
+def update_engine(start_date, min_end_date, end_date, engine_id):
     if start_date is None:
-        start_date = earliest_start
-    start_date = from_sdate(start_date)
+        return dash.no_update
+    if end_date is None:
+        return dash.no_update
 
-    client = server.state.client_generator.get()
-    
-    data = get_create_engine_json(start_date, ["QQQ", "SPY"])
-    response = client.post(url=get_create_url(), data=data)
-    if response.status_code != HTTPStatus.OK:
+    start_date = from_sdate(start_date)
+    min_end_date = from_sdate(min_end_date)
+    end_date = from_sdate(end_date)
+    end_date = min(end_date, dt.datetime.now().date())
+
+    if end_date < min_end_date:
+        return dash.no_update
+
+    tickers = ["QQQ", "SPY"]
+    if engine_id is None:
+        engine_id = create_engine(start_date, tickers)
+    if engine_id is None:
         return dash.no_update
 
     redis = server.state.redis
-    engine_id = response.text.strip("\"")
     engine = get_engine(engine_id, redis)
     if engine is None:
         return dash.no_update
-
-    engine.update(start_date + default_days_length)
-
-    min_date = start_date + default_days_length
-    return engine_id, min_date, min_date, create_figure(engine)
+    if engine.stock_market.start_date != start_date:
+        engine_id = create_engine(start_date, tickers)
+        if engine_id is None:
+            return dash.no_update
+        engine = get_engine(engine_id, redis)
+    
+    engine.update(end_date)
+    return engine_id, end_date, dict(data=get_traces(engine))
 
 @app.callback(
-   Output('date-picker-end', 'min_date_allowed'),
-   Output('stock-market-graph', 'figure'),
-   Input('date-picker-end', 'date'),
-   Input('engine-id', 'data'))
-def update_engine(end_date, data):
-    redis = server.state.redis
-    engine = get_engine(data, redis)
-
-    if engine is None:
+    Output('date-picker-end', 'min_date_allowed'),
+    Input('date-picker-start', 'date'))
+def update_min_date_allowed(start_date):
+    if start_date is None:
         return dash.no_update
-
-    if end_date is None:
-        end_date = engine.stock_market.start_date + default_days_length
-    end_date = from_sdate(end_date)
-
-    engine.update(end_date)
-    return end_date, create_figure(engine)
+    return start_date
 
 if __name__ == '__main__':
     settings = get_settings()
