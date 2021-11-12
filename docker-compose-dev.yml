@@ -18,7 +18,7 @@ services:
 
   api:
     container_name: sme-api-smv
-    image: repo.treescale.com/xelicon/stock-market-engine:v0.1.1
+    image: repo.treescale.com/xelicon/stock-market-engine:v0.3.3
     command: uvicorn stock_market_engine.api.main:app --host 0.0.0.0 --port 8001 --lifespan=on --use-colors --log-level debug
     ports:
       - 8001:8001
