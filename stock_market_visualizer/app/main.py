@@ -120,14 +120,8 @@ def from_sdate(date):
 def get_traces(engine_id, client):
     tickers = api.get_tickers(engine_id, client)
     if len(tickers) == 0:
-<<<<<<< HEAD
-        return
-        
-=======
-        logger.warning(f"No tickers could be found for engine with id '{engine_id}'")
         return
 
->>>>>>> ff2cdc19a73b9bd7b85f7b9952197ace11a8fa82
     traces = []
     redis = server.state.redis
     for ticker in tickers:
@@ -148,27 +142,19 @@ def get_traces(engine_id, client):
             mode="lines"))
     return traces
 
-<<<<<<< HEAD
 def get_tickers(rows):
     return list(map(lambda row: next(iter(row.values())), rows))
 
-=======
->>>>>>> ff2cdc19a73b9bd7b85f7b9952197ace11a8fa82
 @app.callback(
     Output('engine-id', 'data'),
     Output('date-picker-end', 'date'),
     Output('stock-market-graph', 'figure'),
     Input('date-picker-start', 'date'),
     Input('date-picker-end', 'date'),
-<<<<<<< HEAD
     State('date-picker-end', 'min_date_allowed'),
     State('engine-id', 'data'),
     State('ticker-table', 'data'))
 def update_engine(start_date, end_date, min_end_date, engine_id, rows):
-=======
-    Input('engine-id', 'data'))
-def update_engine(start_date, min_end_date, end_date, engine_id):
->>>>>>> ff2cdc19a73b9bd7b85f7b9952197ace11a8fa82
     start_date = from_sdate(start_date)
     min_end_date = from_sdate(min_end_date)
     end_date = from_sdate(end_date)
@@ -184,11 +170,7 @@ def update_engine(start_date, min_end_date, end_date, engine_id):
         return dash.no_update
 
     client = server.state.client_generator.get()
-<<<<<<< HEAD
     tickers = get_tickers(rows)
-=======
-    tickers = ["QQQ", "SPY"]
->>>>>>> ff2cdc19a73b9bd7b85f7b9952197ace11a8fa82
     if engine_id is None:
         engine_id = api.create_engine(start_date, tickers, client)
     if engine_id is None:
@@ -251,6 +233,31 @@ def add_ticker(n_clicks, n_submit, ticker_symbol, engine_id, rows, end_date):
         return rows, "", dash.no_update, dash.no_update
 
     return rows, "", engine_id, dict(data=get_traces(engine_id, client))
+
+
+@app.callback(Output('stock-market-graph', 'figure'),
+              Output('engine-id', 'data'),
+              Input('ticker-table', 'data_previous'),
+              State('ticker-table', 'data'),
+              State('engine-id', 'data'))
+def remove_ticker(previous, current, engine_id):
+    if previous is None:
+        return dash.no_update
+
+    if engine_id is None:
+        return dash.no_update
+
+    removed_ticker_symbols = [row for row in previous if row not in current]
+    assert len(removed_ticker_symbols) == 1
+    ticker_symbol = next(iter(removed_ticker_symbols[0].values()))
+
+    client = server.state.client_generator.get()
+    engine_id = api.remove_ticker(engine_id, ticker_symbol, client)
+    if engine_id is None:
+        return dash.no_update
+
+    return dict(data=get_traces(engine_id, client)), engine_id
+
 
 if __name__ == '__main__':
     settings = get_settings()
