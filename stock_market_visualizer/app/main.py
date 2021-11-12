@@ -5,22 +5,21 @@ from dash.dependencies import Input, Output
 import dash_bootstrap_components as dbc
 import datetime as dt
 from fastapi import FastAPI
-from http import HTTPStatus
 from starlette.middleware.wsgi import WSGIMiddleware
 import plotly.graph_objects as go
 import pandas as pd
 import uvicorn as uvicorn
 from dash_extensions.enrich import Output, DashProxy, Input, MultiplexerTransform
 
-from stock_market_engine.core import Engine
-from stock_market_engine.common.factory import Factory
-from stock_market_engine.ext.signal import register_signal_detector_factories 
-from stock_market_engine.ext.updater import register_stock_updater_factories 
+from stock_market_engine.core.ohlc import OHLC
 
 from stock_market_visualizer.app.config import get_settings
 from stock_market_visualizer.app.redis_helper import init_redis_pool
-from stock_market_visualizer.app.sme_api_helper import get_create_url, get_create_engine_json
+import stock_market_visualizer.app.sme_api_helper as api
+from stock_market_visualizer.common.logging import get_logger
 from stock_market_visualizer.common.requests import ClientSessionGenerator
+
+logger = get_logger(__name__)
 
 app = DashProxy(__name__,
                 requests_pathname_prefix="/sme/",
@@ -71,48 +70,42 @@ async def startup_event():
     server.state.client_generator = ClientSessionGenerator()
     server.state.redis = init_redis_pool()
 
-
-def get_signal_detector_factory():
-    return register_signal_detector_factories(Factory())
-
-def get_stock_updater_factory():
-    return register_stock_updater_factories(Factory())
-
-def get_engine(engine_id, redis):
-    if engine_id is None:
-        return None
-    engine_json = redis.get(engine_id)
-    if engine_json is None:
-        return None
-    return Engine.from_json(engine_json, get_stock_updater_factory(), get_signal_detector_factory())
-
 def from_sdate(date):
+    if date is None:
+        return None
     if isinstance(date, str):
-        date = dt.date.fromisoformat(date)
+        try:
+            date = dt.date.fromisoformat(date)
+        except ValueError as e:
+            logger.warning(e)
+            return None
     return date
 
-def get_traces(engine):
+def get_traces(engine_id, client):
+    tickers = api.get_tickers(engine_id, client)
+    if len(tickers) == 0:
+        logger.warning(f"No tickers could be found for engine with id '{engine_id}'")
+        return
+
     traces = []
-    for ticker in engine.stock_market.tickers:
-        ohlc = engine.stock_market.ohlc(ticker)
-        if ohlc is not None:
-            traces.append(dict(
-                type="scatter",
-                x=ohlc.close.dates,
-                y=ohlc.close.values,
-                name=ticker.symbol,
-                mode="lines"))
+    redis = server.state.redis
+    for ticker in tickers:
+        ohlc_id = api.get_ticker_ohlc(engine_id, ticker, client)
+        if ohlc_id is None:
+            continue
+
+        ohlc_json = redis.get(ohlc_id)
+        if ohlc_json is None:
+            logger.warning(f"OHLC with id '{ohlc_id}' could not be found in redis database!")
+            continue
+        ohlc = OHLC.from_json(ohlc_json)
+        traces.append(dict(
+            type="scatter",
+            x=ohlc.close.dates,
+            y=ohlc.close.values,
+            name=ticker,
+            mode="lines"))
     return traces
-
-def create_engine(start_date, tickers):
-    client = server.state.client_generator.get()
-        
-    data = get_create_engine_json(start_date, tickers)
-    response = client.post(url=get_create_url(), data=data)
-    if response.status_code != HTTPStatus.OK:
-        return None
-
-    return response.text.strip("\"")
 
 @app.callback(
     Output('engine-id', 'data'),
@@ -123,37 +116,39 @@ def create_engine(start_date, tickers):
     Input('date-picker-end', 'date'),
     Input('engine-id', 'data'))
 def update_engine(start_date, min_end_date, end_date, engine_id):
+    start_date = from_sdate(start_date)
+    min_end_date = from_sdate(min_end_date)
+    end_date = from_sdate(end_date)
+
     if start_date is None:
         return dash.no_update
     if end_date is None:
         return dash.no_update
 
-    start_date = from_sdate(start_date)
-    min_end_date = from_sdate(min_end_date)
-    end_date = from_sdate(end_date)
     end_date = min(end_date, dt.datetime.now().date())
 
     if end_date < min_end_date:
         return dash.no_update
 
+    client = server.state.client_generator.get()
     tickers = ["QQQ", "SPY"]
     if engine_id is None:
-        engine_id = create_engine(start_date, tickers)
+        engine_id = api.create_engine(start_date, tickers, client)
     if engine_id is None:
         return dash.no_update
 
-    redis = server.state.redis
-    engine = get_engine(engine_id, redis)
-    if engine is None:
+    engine_start_date = api.get_start_date(engine_id, client)
+    if engine_start_date is None:
         return dash.no_update
-    if engine.stock_market.start_date != start_date:
-        engine_id = create_engine(start_date, tickers)
+
+    if engine_start_date != start_date:
+        engine_id = api.create_engine(start_date, tickers, client)
         if engine_id is None:
             return dash.no_update
-        engine = get_engine(engine_id, redis)
     
-    engine.update(end_date)
-    return engine_id, end_date, dict(data=get_traces(engine))
+    api.update_engine(engine_id, end_date, client)
+    traces = get_traces(engine_id, client)
+    return engine_id, end_date, dict(data=traces)
 
 @app.callback(
     Output('date-picker-end', 'min_date_allowed'),

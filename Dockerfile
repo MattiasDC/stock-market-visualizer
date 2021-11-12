@@ -14,7 +14,7 @@ COPY setup.cfg .
 
 COPY ./stock_market_visualizer ./stock_market_visualizer
 
-RUN pip install -U -e . --no-cache-dir
+RUN pip install -e . --no-cache-dir
 
 EXPOSE 8000
 CMD ["python", "stock_market_visualizer/app/main.py", "--host", "0.0.0.0"]
