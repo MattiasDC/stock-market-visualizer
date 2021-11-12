@@ -120,8 +120,14 @@ def from_sdate(date):
 def get_traces(engine_id, client):
     tickers = api.get_tickers(engine_id, client)
     if len(tickers) == 0:
+<<<<<<< HEAD
         return
         
+=======
+        logger.warning(f"No tickers could be found for engine with id '{engine_id}'")
+        return
+
+>>>>>>> ff2cdc19a73b9bd7b85f7b9952197ace11a8fa82
     traces = []
     redis = server.state.redis
     for ticker in tickers:
@@ -142,19 +148,27 @@ def get_traces(engine_id, client):
             mode="lines"))
     return traces
 
+<<<<<<< HEAD
 def get_tickers(rows):
     return list(map(lambda row: next(iter(row.values())), rows))
 
+=======
+>>>>>>> ff2cdc19a73b9bd7b85f7b9952197ace11a8fa82
 @app.callback(
     Output('engine-id', 'data'),
     Output('date-picker-end', 'date'),
     Output('stock-market-graph', 'figure'),
     Input('date-picker-start', 'date'),
     Input('date-picker-end', 'date'),
+<<<<<<< HEAD
     State('date-picker-end', 'min_date_allowed'),
     State('engine-id', 'data'),
     State('ticker-table', 'data'))
 def update_engine(start_date, end_date, min_end_date, engine_id, rows):
+=======
+    Input('engine-id', 'data'))
+def update_engine(start_date, min_end_date, end_date, engine_id):
+>>>>>>> ff2cdc19a73b9bd7b85f7b9952197ace11a8fa82
     start_date = from_sdate(start_date)
     min_end_date = from_sdate(min_end_date)
     end_date = from_sdate(end_date)
@@ -170,7 +184,11 @@ def update_engine(start_date, end_date, min_end_date, engine_id, rows):
         return dash.no_update
 
     client = server.state.client_generator.get()
+<<<<<<< HEAD
     tickers = get_tickers(rows)
+=======
+    tickers = ["QQQ", "SPY"]
+>>>>>>> ff2cdc19a73b9bd7b85f7b9952197ace11a8fa82
     if engine_id is None:
         engine_id = api.create_engine(start_date, tickers, client)
     if engine_id is None:
