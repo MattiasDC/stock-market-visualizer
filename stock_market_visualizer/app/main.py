@@ -1,4 +1,5 @@
 import dash
+from dash import dash_table
 from dash import dcc
 from dash import html
 from dash.dependencies import Input, Output
@@ -9,7 +10,7 @@ from starlette.middleware.wsgi import WSGIMiddleware
 import plotly.graph_objects as go
 import pandas as pd
 import uvicorn as uvicorn
-from dash_extensions.enrich import Output, DashProxy, Input, MultiplexerTransform
+from dash_extensions.enrich import Output, DashProxy, Input, MultiplexerTransform, State
 
 from stock_market_engine.core.ohlc import OHLC
 
@@ -58,6 +59,41 @@ app.layout = dbc.Container(children=[
                                 min_date_allowed=earliest_start+dt.timedelta(days=1),
                                 placeholder='End Date',
                                 display_format='D-M-Y')
+                        ]),
+                    dbc.Col(
+                        [
+                            dbc.Row(
+                                html.Div(
+                                    [
+                                        dbc.Input(
+                                            id='add-ticker-input',
+                                            placeholder='Ticker',
+                                            n_submit=0),
+                                        html.Div(dbc.Button('Add',
+                                            id='add-ticker-button',
+                                            n_clicks=0,
+                                            style={'margin-left': 5}),
+                                            className="input-group-append")
+                                    ],
+                                    className="input-group")),
+                            dbc.Row(
+                                [
+                                    dcc.Checklist(
+                                        id='show-ticker-table',
+                                        options=[{'label': ' Show Tickers', 'value': 'S'}],
+                                        value=['S']),
+                                    dbc.Collapse(
+                                        dash_table.DataTable(
+                                            id='ticker-table',
+                                            columns=[{
+                                                'name': 'Ticker',
+                                                'id': 'ticker-col'}],
+                                            data=[],
+                                            row_deletable=True,
+                                            style_table={'margin-top': 10}),
+                                        id="collapse-ticker-table",
+                                        is_open=True)
+                                ])
                         ])
                 ])
         ]),
@@ -84,9 +120,8 @@ def from_sdate(date):
 def get_traces(engine_id, client):
     tickers = api.get_tickers(engine_id, client)
     if len(tickers) == 0:
-        logger.warning(f"No tickers could be found for engine with id '{engine_id}'")
         return
-
+        
     traces = []
     redis = server.state.redis
     for ticker in tickers:
@@ -107,15 +142,19 @@ def get_traces(engine_id, client):
             mode="lines"))
     return traces
 
+def get_tickers(rows):
+    return list(map(lambda row: next(iter(row.values())), rows))
+
 @app.callback(
     Output('engine-id', 'data'),
     Output('date-picker-end', 'date'),
     Output('stock-market-graph', 'figure'),
     Input('date-picker-start', 'date'),
-    Input('date-picker-end', 'min_date_allowed'),
     Input('date-picker-end', 'date'),
-    Input('engine-id', 'data'))
-def update_engine(start_date, min_end_date, end_date, engine_id):
+    State('date-picker-end', 'min_date_allowed'),
+    State('engine-id', 'data'),
+    State('ticker-table', 'data'))
+def update_engine(start_date, end_date, min_end_date, engine_id, rows):
     start_date = from_sdate(start_date)
     min_end_date = from_sdate(min_end_date)
     end_date = from_sdate(end_date)
@@ -131,7 +170,7 @@ def update_engine(start_date, min_end_date, end_date, engine_id):
         return dash.no_update
 
     client = server.state.client_generator.get()
-    tickers = ["QQQ", "SPY"]
+    tickers = get_tickers(rows)
     if engine_id is None:
         engine_id = api.create_engine(start_date, tickers, client)
     if engine_id is None:
@@ -157,6 +196,43 @@ def update_min_date_allowed(start_date):
     if start_date is None:
         return dash.no_update
     return start_date
+
+@app.callback(
+    Input('show-ticker-table', 'value'),
+    Output('collapse-ticker-table', 'is_open'))
+def toggle_collapse_ticker_table(show_ticker_table):
+    return 'S' in show_ticker_table
+
+@app.callback(
+    Output('ticker-table', 'data'),
+    Output('add-ticker-input', 'value'),
+    Output('engine-id', 'data'),
+    Output('stock-market-graph', 'figure'),
+    Input('add-ticker-button', 'n_clicks'),
+    Input('add-ticker-input', 'n_submit'),
+    State('add-ticker-input', 'value'),
+    State('engine-id', 'data'),
+    State('ticker-table', 'data'),
+    State('date-picker-end', 'date'))
+def add_ticker(n_clicks, n_submit, ticker_symbol, engine_id, rows, end_date):
+    if ticker_symbol in get_tickers(rows) or not ticker_symbol:
+        return dash.no_update, "", dash.no_update, dash.no_update
+
+    if n_clicks == 0 and n_submit == 0:
+        return dash.no_update, "", dash.no_update, dash.no_update
+    
+    rows.append({'ticker-col' : ticker_symbol})
+
+    if engine_id is None:
+        return rows, "", dash.no_update, dash.no_update
+
+    client = server.state.client_generator.get()
+    engine_id = api.add_ticker(engine_id, ticker_symbol, client)
+    api.update_engine(engine_id, end_date, client)
+    if engine_id is None:
+        return rows, "", dash.no_update, dash.no_update
+
+    return rows, "", engine_id, dict(data=get_traces(engine_id, client))
 
 if __name__ == '__main__':
     settings = get_settings()

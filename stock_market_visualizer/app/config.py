@@ -14,6 +14,7 @@ class Settings(BaseSettings):
     api_url: AnyUrl = os.getenv("API_URL", "http://sme-api-smv")
     api_port: int = os.getenv("API_PORT", 8001)
     debug: bool = os.getenv("DEBUG", False)
+    max_ticker_symbol_length : int = os.getenv("MAX_TICKER_SYMBOL_LENGTH", 10)
 
 @cache
 def get_settings() -> BaseSettings:

@@ -5,7 +5,7 @@ from http import HTTPStatus
 from stock_market_visualizer.app.config import get_settings
 from stock_market_visualizer.common.requests import concat_port
 
-def create_url():
+def get_create_url():
     settings = get_settings()
     return concat_port(settings.api_url, port=settings.api_port) + "/create"
 
@@ -25,6 +25,10 @@ def get_ticker_ohlc_url(engine_id, ticker):
     settings = get_settings()
     return concat_port(settings.api_url, port=settings.api_port) + f"/ticker/{engine_id}/{ticker}"
 
+def get_add_ticker_url(engine_id, ticker):
+    settings = get_settings()
+    return concat_port(settings.api_url, port=settings.api_port) + f"/addticker/{engine_id}/{ticker}"    
+
 def get_create_engine_json(start_date, tickers):
     return json.dumps({
         "stock_market": {
@@ -43,7 +47,7 @@ def get_create_engine_json(start_date, tickers):
 
 def create_engine(start_date, tickers, client):
     data = get_create_engine_json(start_date, tickers)
-    response = client.post(url=create_url(), data=data)
+    response = client.post(url=get_create_url(), data=data)
     if response.status_code != HTTPStatus.OK:
         return None
 
@@ -65,4 +69,11 @@ def get_ticker_ohlc(engine_id, ticker, client):
     response = client.get(url=get_ticker_ohlc_url(engine_id, ticker))
     if response.status_code == HTTPStatus.NO_CONTENT:
         return None
+    return response.text.strip("\"")
+
+def add_ticker(engine_id, ticker, client):
+    response = client.post(url=get_add_ticker_url(engine_id, ticker))
+    if response.status_code != HTTPStatus.OK:
+        return None
+
     return response.text.strip("\"")
