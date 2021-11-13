@@ -12,7 +12,8 @@ import pandas as pd
 import uvicorn as uvicorn
 from dash_extensions.enrich import Output, DashProxy, Input, MultiplexerTransform, State
 
-from stock_market_engine.core.ohlc import OHLC
+from stock_market_engine.core import OHLC
+from stock_market_engine.core.time_series import make_relative
 
 from stock_market_visualizer.app.config import get_settings
 from stock_market_visualizer.app.redis_helper import init_redis_pool
@@ -122,7 +123,7 @@ def get_traces(engine_id, client):
     if len(tickers) == 0:
         return
 
-    traces = []
+    closes = {}
     redis = server.state.redis
     for ticker in tickers:
         ohlc_id = api.get_ticker_ohlc(engine_id, ticker, client)
@@ -133,14 +134,21 @@ def get_traces(engine_id, client):
         if ohlc_json is None:
             logger.warning(f"OHLC with id '{ohlc_id}' could not be found in redis database!")
             continue
-        ohlc = OHLC.from_json(ohlc_json)
-        traces.append(dict(
-            type="scatter",
-            x=ohlc.close.dates,
-            y=ohlc.close.values,
-            name=ticker,
-            mode="lines"))
-    return traces
+        closes[ticker] = OHLC.from_json(ohlc_json).close
+
+    if len(closes) > 1:
+        relative_closes = zip(closes.keys(), make_relative(closes.values()))
+        return [ dict(type="scatter",
+                      x=relative_close.dates,
+                      y=relative_close.values,
+                      name=ticker,
+                      mode="lines") for ticker, relative_close in relative_closes]
+
+    return [dict(type="scatter",
+                 x=close.dates,
+                 y=close.values,
+                 name=ticker,
+                 mode="lines") for ticker, close in closes.items()]
 
 def get_tickers(rows):
     return list(map(lambda row: next(iter(row.values())), rows))
