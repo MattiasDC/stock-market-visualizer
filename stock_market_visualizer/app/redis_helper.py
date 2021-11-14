@@ -1,5 +1,5 @@
 from redis import from_url
-from .config import Settings
+from stock_market_visualizer.app.config import Settings
 from stock_market_visualizer.common.logging import get_logger
 
 logger = get_logger(__name__)
