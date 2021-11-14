@@ -121,7 +121,7 @@ def from_sdate(date):
 def get_traces(engine_id, client):
     tickers = api.get_tickers(engine_id, client)
     if len(tickers) == 0:
-        return
+        return []
 
     closes = {}
     redis = server.state.redis
@@ -138,17 +138,24 @@ def get_traces(engine_id, client):
 
     if len(closes) > 1:
         relative_closes = zip(closes.keys(), make_relative(closes.values()))
-        return [ dict(type="scatter",
-                      x=relative_close.dates,
-                      y=relative_close.values,
-                      name=ticker,
-                      mode="lines") for ticker, relative_close in relative_closes]
+        return [dict(type="scatter",
+                     x=relative_close.dates,
+                     y=relative_close.values-1,
+                     name=ticker,
+                     mode="lines") for ticker, relative_close in relative_closes]
 
     return [dict(type="scatter",
                  x=close.dates,
                  y=close.values,
                  name=ticker,
                  mode="lines") for ticker, close in closes.items()]
+
+def get_traces_and_layout(engine_id, client):
+    traces = get_traces(engine_id, client)
+    layout = {}
+    if len(traces) > 1:
+        layout['yaxis'] = dict(tickformat=',.1%')
+    return dict(data=traces, layout=layout)
 
 def get_tickers(rows):
     return list(map(lambda row: next(iter(row.values())), rows))
@@ -194,8 +201,7 @@ def update_engine(start_date, end_date, min_end_date, engine_id, rows):
             return dash.no_update
     
     api.update_engine(engine_id, end_date, client)
-    traces = get_traces(engine_id, client)
-    return engine_id, end_date, dict(data=traces)
+    return engine_id, end_date, get_traces_and_layout(engine_id, client)
 
 @app.callback(
     Output('date-picker-end', 'min_date_allowed'),
@@ -223,6 +229,7 @@ def toggle_collapse_ticker_table(show_ticker_table):
     State('ticker-table', 'data'),
     State('date-picker-end', 'date'))
 def add_ticker(n_clicks, n_submit, ticker_symbol, engine_id, rows, end_date):
+    ticker_symbol = str.upper(ticker_symbol)
     if ticker_symbol in get_tickers(rows) or not ticker_symbol:
         return dash.no_update, "", dash.no_update, dash.no_update
 
@@ -240,8 +247,7 @@ def add_ticker(n_clicks, n_submit, ticker_symbol, engine_id, rows, end_date):
     if engine_id is None:
         return rows, "", dash.no_update, dash.no_update
 
-    return rows, "", engine_id, dict(data=get_traces(engine_id, client))
-
+    return rows, "", engine_id, get_traces_and_layout(engine_id, client)
 
 @app.callback(Output('stock-market-graph', 'figure'),
               Output('engine-id', 'data'),
