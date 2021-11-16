@@ -4,7 +4,7 @@ import uvicorn as uvicorn
 from dash_extensions.enrich import DashProxy, MultiplexerTransform
 
 from stock_market_visualizer.app.config import get_settings
-import stock_market_visualizer.app.layout as layout
+import stock_market_visualizer.app.layouts as layout
 from stock_market_visualizer.app.callbacks import register_callbacks
 from stock_market_visualizer.app.redis_helper import init_redis_pool
 from stock_market_visualizer.common.requests import ClientSessionGenerator
