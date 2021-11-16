@@ -22,7 +22,14 @@ server = FastAPI()
 server.mount("/sme", WSGIMiddleware(app.server))
 
 app.layout = layout.get_layout()
-register_callbacks(app, server)
+
+def get_client_generator():
+    return server.state.client_generator.get()
+
+def get_redis():
+    return server.state.redis
+
+register_callbacks(app, get_client_generator, get_redis)
 
 @server.on_event("startup")
 async def startup_event():
