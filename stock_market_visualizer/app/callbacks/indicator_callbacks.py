@@ -30,6 +30,13 @@ def register_indicator_callbacks(app):
         ticker = get_active_ticker(ticker_cell, rows)
         return f"Add {ticker} Indicator"
 
+    @app.callback(
+        Input('ticker-table', 'data'),
+        State('indicator-table', 'data'),
+        Output('indicator-table', 'data'))
+    def remove_indicator_on_ticker_removal(ticker_rows, indicator_rows):
+        return [ ir for ir in indicator_rows if {'ticker-col' : ir['ticker-col']} in ticker_rows ]
+
     def add_create_indicator_callbacks(indicator, arguments):
         @app.callback(Input(f'dropdown-{indicator.__name__}', 'n_clicks'),
                       State('indicator-table', 'data'),
