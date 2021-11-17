@@ -35,7 +35,10 @@ class CallbackHelper:
                      y=indicator_values.values,
                      name=indicator_values.name,
                      mode="lines")
-                for indicator_values in [indicator(ticker_values) for indicator in indicators_per_ticker[ticker]]]
+                for indicator_values in [indicator(TimeSeries(ticker, pd.concat([ticker_values.dates,
+                                                                                ticker_values.values],
+                                                                                axis=1)))
+                                         for indicator in indicators_per_ticker[ticker]]]
         return traces
 
     def get_traces(self, engine_id, indicators):
@@ -79,6 +82,6 @@ class CallbackHelper:
     def get_traces_and_layout(self, engine_id, indicators):
         traces = self.get_traces(engine_id, indicators)
         layout = {}
-        if len(traces) > 1:
+        if len(traces) - len(indicators) > 1:
             layout['yaxis'] = dict(tickformat=',.1%')
         return dict(data=traces, layout=layout)
