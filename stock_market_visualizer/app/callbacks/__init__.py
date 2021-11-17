@@ -5,4 +5,4 @@ from .ticker_callbacks import register_ticker_callbacks
 def register_callbacks(app, client_getter, redis_getter):
     register_date_callbacks(app, client_getter, redis_getter)
     register_ticker_callbacks(app, client_getter, redis_getter)
-    register_indicator_callbacks(app)
+    register_indicator_callbacks(app, client_getter, redis_getter)

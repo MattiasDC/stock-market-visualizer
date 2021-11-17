@@ -1,11 +1,14 @@
 from dash_extensions.enrich import Output, Input, State
 
-from stock_market_visualizer.app.indicators import get_indicators
+from stock_market_visualizer.app.indicators import get_indicators, get_indicator_factory
+from .callback_helper import CallbackHelper
 
 def get_active_ticker(cell, rows):
         return rows[cell['row']][cell['column_id']]
 
-def register_indicator_callbacks(app):
+def register_indicator_callbacks(app, client_getter, redis_getter):
+    callback_helper = CallbackHelper(client_getter, redis_getter)
+
     @app.callback(
         Input('show-indicator-table', 'value'),
         Output('collapse-indicator-table', 'is_open'))
@@ -33,9 +36,18 @@ def register_indicator_callbacks(app):
     @app.callback(
         Input('ticker-table', 'data'),
         State('indicator-table', 'data'),
+        State('engine-id', 'data'),
         Output('indicator-table', 'data'))
-    def remove_indicator_on_ticker_removal(ticker_rows, indicator_rows):
+    def remove_indicator_on_ticker_removal(ticker_rows, indicator_rows, engine_id):
         return [ ir for ir in indicator_rows if {'ticker-col' : ir['ticker-col']} in ticker_rows ]
+
+    @app.callback(
+        Input('indicator-table', 'data'),
+        State('engine-id', 'data'),
+        Output('stock-market-graph', 'figure'))
+    def indicators_change(rows, engine_id):
+        indicators = callback_helper.get_configured_indicators(rows)
+        return callback_helper.get_traces_and_layout(engine_id, indicators)
 
     def add_create_indicator_callbacks(indicator, arguments):
         @app.callback(Input(f'dropdown-{indicator.__name__}', 'n_clicks'),
@@ -44,7 +56,7 @@ def register_indicator_callbacks(app):
         def create_indicator_form(n_clicks, rows):
             return True
 
-        @app.callback(Input(f'close-{indicator.__name__}', 'n_clicks'),
+        @app.callback(Input(f'add-{indicator.__name__}', 'n_clicks'),
                       State('indicator-table', 'data'),
                       State('ticker-table', 'active_cell'),
                       State('ticker-table', 'data'),
@@ -57,7 +69,9 @@ def register_indicator_callbacks(app):
 
             created_indicator = indicator(*arguments)
             indicator_rows.append({'indicator-col':str(created_indicator),
-                                   'ticker-col': get_active_ticker(ticker_cell, ticker_rows)})
+                                   'ticker-col': get_active_ticker(ticker_cell, ticker_rows),
+                                   'indicator' : { 'name' : indicator.__name__, "config" : created_indicator.to_json()}})
+            
             return False, indicator_rows
 
     indicators = get_indicators()

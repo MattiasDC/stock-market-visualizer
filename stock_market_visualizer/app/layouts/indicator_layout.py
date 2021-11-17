@@ -17,12 +17,17 @@ def get_create_indicator_modals_layout():
                         [
                         html.P(f"{argument}:"),
                         html.Div(
-                            dbc.Input(id=f'{indicator.__name__}-{argument}-input', style={'margin-left': 5}, type="number"),
+                            dbc.Input(id=f'{indicator.__name__}-{argument}-input',
+                                      style={'margin-left': 5},
+                                      type="number"),
                             className="input-group-append")
                         ],
                         className="input-group")
                    for argument in indicators[indicator]])),
-               dbc.ModalFooter(dbc.Button("Close", id=f"close-{indicator.__name__}", className="ms-auto", n_clicks=0))
+               dbc.ModalFooter(dbc.Button("Add",
+                                          id=f"add-{indicator.__name__}",
+                                          className="ms-auto",
+                                          n_clicks=0))
                ],
                id=f"modal-{indicator.__name__}",
                is_open=False)

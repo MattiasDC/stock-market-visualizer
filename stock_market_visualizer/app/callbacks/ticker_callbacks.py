@@ -23,9 +23,10 @@ def register_ticker_callbacks(app, client_getter, redis_getter):
         State('add-ticker-input', 'value'),
         State('engine-id', 'data'),
         State('ticker-table', 'data'),
-        State('date-picker-end', 'date'))
-    def add_ticker(n_clicks, n_submit, ticker_symbol, engine_id, rows, end_date):
-        ticker_symbol = str.upper(ticker_symbol)
+        State('date-picker-end', 'date'),
+        State('indicator-table', 'data'))
+    def add_ticker(n_clicks, n_submit, ticker_symbol, engine_id, rows, end_date, indicator_rows):
+        ticker_symbol = str.upper(ticker_symbol.rstrip())
         if ticker_symbol in callback_helper.get_tickers(rows) or not ticker_symbol:
             return dash.no_update, "", dash.no_update, dash.no_update
     
@@ -42,15 +43,17 @@ def register_ticker_callbacks(app, client_getter, redis_getter):
         if engine_id is None:
             return rows, "", dash.no_update, dash.no_update
     
-        return rows, "", engine_id, callback_helper.get_traces_and_layout(engine_id)
+        indicators = callback_helper.get_configured_indicators(indicator_rows)
+        return rows, "", engine_id, callback_helper.get_traces_and_layout(engine_id, indicators)
     
     @app.callback(
         Output('stock-market-graph', 'figure'),
         Output('engine-id', 'data'),
         Input('ticker-table', 'data_previous'),
         State('ticker-table', 'data'),
-        State('engine-id', 'data'))
-    def remove_ticker(previous, current, engine_id):
+        State('engine-id', 'data'),
+        State('indicator-table', 'data'))
+    def remove_ticker(previous, current, engine_id, indicator_rows):
         if previous is None:
             return dash.no_update
     
@@ -66,4 +69,5 @@ def register_ticker_callbacks(app, client_getter, redis_getter):
         if engine_id is None:
             return dash.no_update
     
-        return callback_helper.get_traces_and_layout(engine_id), engine_id
+        indicators = callback_helper.get_configured_indicators(indicator_rows)
+        return callback_helper.get_traces_and_layout(engine_id, indicators), engine_id

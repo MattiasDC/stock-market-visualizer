@@ -25,8 +25,9 @@ def register_date_callbacks(app, client_getter, redis_getter):
         Input('date-picker-end', 'date'),
         State('date-picker-end', 'min_date_allowed'),
         State('engine-id', 'data'),
-        State('ticker-table', 'data'))
-    def update_engine(start_date, end_date, min_end_date, engine_id, rows):
+        State('ticker-table', 'data'),
+        State('indicator-table', 'data'))
+    def update_engine(start_date, end_date, min_end_date, engine_id, ticker_rows, indicator_rows):
         start_date = from_sdate(start_date)
         min_end_date = from_sdate(min_end_date)
         end_date = from_sdate(end_date)
@@ -42,7 +43,7 @@ def register_date_callbacks(app, client_getter, redis_getter):
             return dash.no_update
     
         client = callback_helper.get_client()
-        tickers = callback_helper.get_tickers(rows)
+        tickers = callback_helper.get_tickers(ticker_rows)
         if engine_id is None:
             engine_id = api.create_engine(start_date, tickers, client)
         if engine_id is None:
@@ -58,4 +59,5 @@ def register_date_callbacks(app, client_getter, redis_getter):
                 return dash.no_update
         
         api.update_engine(engine_id, end_date, client)
-        return engine_id, end_date, callback_helper.get_traces_and_layout(engine_id)
+        indicators = callback_helper.get_configured_indicators(indicator_rows)
+        return engine_id, end_date, callback_helper.get_traces_and_layout(engine_id, indicators)
