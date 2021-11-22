@@ -1,6 +1,7 @@
 from redis import from_url
+from utils.logging import get_logger
+
 from stock_market_visualizer.app.config import Settings
-from stock_market_visualizer.common.logging import get_logger
 
 logger = get_logger(__name__)
 global_settings = Settings()

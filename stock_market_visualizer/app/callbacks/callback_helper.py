@@ -1,12 +1,12 @@
 from collections import defaultdict
 import pandas as pd
 
-from stock_market_engine.core import OHLC
-from stock_market_engine.core.time_series import make_relative, TimeSeries
+from stock_market.core import OHLC
+from stock_market.core.time_series import make_relative, TimeSeries
 
 import stock_market_visualizer.app.sme_api_helper as api
 from stock_market_visualizer.app.indicators import get_indicator_factory
-from stock_market_visualizer.common.logging import get_logger
+from utils.logging import get_logger
 
 logger = get_logger(__name__)
 
@@ -30,15 +30,16 @@ class CallbackHelper:
         return indicators_per_ticker
 
     def create_indicator_traces(self, indicators_per_ticker, ticker, ticker_values):
-        traces = [dict(type="scatter",
-                     x=indicator_values.dates,
-                     y=indicator_values.values,
-                     name=indicator_values.name,
-                     mode="lines")
-                for indicator_values in [indicator(TimeSeries(ticker, pd.concat([ticker_values.dates,
-                                                                                ticker_values.values],
-                                                                                axis=1)))
-                                         for indicator in indicators_per_ticker[ticker]]]
+        traces = []
+        for indicator in indicators_per_ticker[ticker]:
+            for indicator_values in [indicator(TimeSeries(ticker, pd.concat([ticker_values.dates,
+                                                                             ticker_values.values],
+                                                                             axis=1)))]:
+                traces.append(dict(type="scatter",
+                                   x=indicator_values.dates,
+                                   y=indicator_values.values,
+                                   name=indicator_values.name,
+                                   mode="lines"))
         return traces
 
     def get_traces(self, engine_id, indicators):

@@ -2,8 +2,9 @@ import dash
 from dash_extensions.enrich import Output, Input, State
 import datetime as dt
 
+from utils.dateutils import from_sdate
+
 import stock_market_visualizer.app.sme_api_helper as api
-from stock_market_visualizer.common.utils import from_sdate
 from .callback_helper import CallbackHelper
 
 def register_date_callbacks(app, client_getter, redis_getter):

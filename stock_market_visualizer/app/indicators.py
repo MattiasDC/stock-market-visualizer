@@ -1,9 +1,7 @@
-import inspect
+from utils.inspection import get_constructor_arguments
 
-from stock_market_engine.common.factory import Factory
-from stock_market_engine.ext.indicator import MovingAverage, ExponentialMovingAverage
-
-from stock_market_visualizer.common.utils import get_constructor_arguments
+from stock_market.common.factory import Factory
+from stock_market.ext.indicator import MovingAverage, ExponentialMovingAverage
 
 def get_indicators():
 	return { i : get_constructor_arguments(i) for i in [MovingAverage, ExponentialMovingAverage] } 

@@ -1,11 +1,14 @@
 FROM python:3.9-slim-buster
 
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends git \
+ && apt-get purge -y --auto-remove 
+ 
 RUN mkdir -p /app
 
 # set working directory
 WORKDIR /app
 
-RUN apt-get update && apt-get install -y git
 RUN python -m pip install --no-cache-dir --upgrade pip
 
 COPY setup.py .
