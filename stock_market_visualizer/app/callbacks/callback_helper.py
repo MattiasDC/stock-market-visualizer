@@ -83,6 +83,6 @@ class CallbackHelper:
     def get_traces_and_layout(self, engine_id, indicators):
         traces = self.get_traces(engine_id, indicators)
         layout = {}
-        if len(traces) - len(indicators) > 1:
+        if len(traces) - sum(map(len, indicators.values())) > 1:
             layout['yaxis'] = dict(tickformat=',.1%')
         return dict(data=traces, layout=layout)
