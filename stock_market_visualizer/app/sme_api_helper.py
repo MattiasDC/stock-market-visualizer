@@ -39,13 +39,8 @@ def get_create_engine_json(start_date, tickers):
             "start_date": start_date.isoformat(),
             "tickers": [{"symbol": ticker} for ticker in tickers]
         },
-        "signals": {
-            "signals": [
-                {
-                    "name": "monthly",
-                    "config": "{}"
-                }
-              ]
+        "signal_detectors": {
+            "signal_detectors": []
           }
       })
 

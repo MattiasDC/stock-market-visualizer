@@ -27,28 +27,30 @@ def register_ticker_callbacks(app, client_getter, redis_getter):
         State('indicator-table', 'data'))
     def add_ticker(n_clicks, n_submit, ticker_symbol, engine_id, rows, end_date, indicator_rows):
         ticker_symbol = str.upper(ticker_symbol.rstrip())
+        no_update = (dash.no_update, "", dash.no_update, dash.no_update) 
         if ticker_symbol in callback_helper.get_tickers(rows) or not ticker_symbol:
-            return dash.no_update, "", dash.no_update, dash.no_update
+            return no_update
     
         if n_clicks == 0 and n_submit == 0:
-            return dash.no_update, "", dash.no_update, dash.no_update
+            return no_update
         
-        rows.append({'ticker-col' : ticker_symbol})
         if engine_id is None:
-            return rows, "", dash.no_update, dash.no_update
+            return no_update
 
         client = callback_helper.get_client()
         engine_id = api.add_ticker(engine_id, ticker_symbol, client)
-        api.update_engine(engine_id, end_date, client)
         if engine_id is None:
-            return rows, "", dash.no_update, dash.no_update
-    
+            return no_update
+
+        rows = [{'ticker-col' : ticker} for ticker in api.get_tickers(engine_id, client)]
+        api.update_engine(engine_id, end_date, client)
         indicators = callback_helper.get_configured_indicators(indicator_rows)
         return rows, "", engine_id, callback_helper.get_traces_and_layout(engine_id, indicators)
     
     @app.callback(
         Output('stock-market-graph', 'figure'),
         Output('engine-id', 'data'),
+        Output('ticker-table', 'data'),
         Input('ticker-table', 'data_previous'),
         State('ticker-table', 'data'),
         State('engine-id', 'data'),
@@ -69,5 +71,6 @@ def register_ticker_callbacks(app, client_getter, redis_getter):
         if engine_id is None:
             return dash.no_update
     
+        rows = [{'ticker-col' : ticker} for ticker in api.get_tickers(engine_id, client)]
         indicators = callback_helper.get_configured_indicators(indicator_rows)
-        return callback_helper.get_traces_and_layout(engine_id, indicators), engine_id
+        return callback_helper.get_traces_and_layout(engine_id, indicators), engine_id, rows
