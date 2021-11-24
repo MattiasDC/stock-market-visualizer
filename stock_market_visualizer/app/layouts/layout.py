@@ -1,9 +1,11 @@
 from dash import dcc
 from dash import html
 import dash_bootstrap_components as dbc
+import datetime as dt
 
 from .date_layout import get_start_date_layout, get_end_date_layout
 from .indicator_layout import get_create_indicator_modals_layout, get_indicator_table_layout
+from .interval_layout import get_interval_layout
 from .ticker_layout import get_ticker_table_layout
 
 def get_themes():
@@ -24,5 +26,6 @@ def get_layout():
                 ])
         ]),
         dcc.Graph(id='stock-market-graph'),
-        dcc.Store(id='engine-id')
+        dcc.Store(id='engine-id'),
+        get_interval_layout()
         ] + get_create_indicator_modals_layout())

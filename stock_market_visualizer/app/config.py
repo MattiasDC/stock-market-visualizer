@@ -15,6 +15,7 @@ class Settings(BaseSettings):
     api_port: int = os.getenv("API_PORT", 8001)
     debug: bool = os.getenv("DEBUG", False)
     max_ticker_symbol_length : int = os.getenv("MAX_TICKER_SYMBOL_LENGTH", 10)
+    update_interval: int = os.getenv("UPDATE_INTERVAL_SECONDS", 30)
 
 @cache
 def get_settings() -> BaseSettings:
