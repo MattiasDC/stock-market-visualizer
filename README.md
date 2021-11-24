@@ -29,3 +29,9 @@ Any donation is highly appreciated and optional
 
 ### Paypal
 [![paypal](https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=BCY3MB2C845WJ)
+
+### Bitcoin address
+bc1qu9eqkavmm6y2evxf37hma0uxuzrhspddfgt73e
+
+### Ethereum address
+0xEC4A8c571Dfa3199D7B8674a043Ba88e51CC8B64
