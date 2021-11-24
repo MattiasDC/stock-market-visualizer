@@ -24,7 +24,7 @@ Please make sure to update tests as appropriate.
 ## License
 [MIT](https://choosealicense.com/licenses/mit/)
 
-## Donate
+## Donations
 Any donation is highly appreciated and optional
 
 ### Paypal
