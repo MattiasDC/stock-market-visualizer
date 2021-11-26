@@ -8,11 +8,9 @@ services:
     ports:
       - 8000:8000
     depends_on:
-      - redis
       - api
     environment:
       - DEBUG=True
-      - REDIS_DB=0
       - MAX_TICKER_SYMBOL_LENGTH=10
     volumes:
       - .:/app
