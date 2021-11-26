@@ -11,9 +11,8 @@ from utils.logging import get_logger
 logger = get_logger(__name__)
 
 class CallbackHelper:
-    def __init__(self, client_getter, redis_getter):
+    def __init__(self, client_getter):
         self.__client_getter = client_getter
-        self.__redis_getter = redis_getter
 
     def get_client(self):
         return self.__client_getter()
@@ -40,6 +39,7 @@ class CallbackHelper:
                                    y=indicator_values.values,
                                    name=indicator_values.name,
                                    mode="lines"))
+                
         return traces
 
     def get_traces(self, engine_id, indicators):
@@ -48,16 +48,10 @@ class CallbackHelper:
         if len(tickers) == 0:
             return []
 
-        redis = self.__redis_getter()
         closes = {}
         for ticker in tickers:
-            ohlc_id = api.get_ticker_ohlc(engine_id, ticker, client)
-            if ohlc_id is None:
-                continue
-    
-            ohlc_json = redis.get(ohlc_id)
+            ohlc_json = api.get_ticker_ohlc(engine_id, ticker, client)
             if ohlc_json is None:
-                logger.warning(f"OHLC with id '{ohlc_id}' could not be found in redis database!")
                 continue
             closes[ticker] = OHLC.from_json(ohlc_json).close
     

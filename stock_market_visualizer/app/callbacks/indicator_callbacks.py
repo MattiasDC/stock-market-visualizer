@@ -6,8 +6,8 @@ from .callback_helper import CallbackHelper
 def get_active_ticker(cell, rows):
         return rows[cell['row']][cell['column_id']]
 
-def register_indicator_callbacks(app, client_getter, redis_getter):
-    callback_helper = CallbackHelper(client_getter, redis_getter)
+def register_indicator_callbacks(app, client_getter):
+    callback_helper = CallbackHelper(client_getter)
 
     @app.callback(
         Input('show-indicator-table', 'value'),
@@ -70,8 +70,7 @@ def register_indicator_callbacks(app, client_getter, redis_getter):
             created_indicator = indicator(*arguments)
             indicator_rows.append({'indicator-col':str(created_indicator),
                                    'ticker-col': get_active_ticker(ticker_cell, ticker_rows),
-                                   'indicator' : { 'name' : indicator.__name__, "config" : created_indicator.to_json()}})
-            
+                                   'indicator' : { 'name' : indicator.__name__, "config" : created_indicator.to_json()}}) 
             return False, indicator_rows
 
     indicators = get_indicators()

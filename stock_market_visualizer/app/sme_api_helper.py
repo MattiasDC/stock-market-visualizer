@@ -39,9 +39,7 @@ def get_create_engine_json(start_date, tickers):
             "start_date": start_date.isoformat(),
             "tickers": [{"symbol": ticker} for ticker in tickers]
         },
-        "signal_detectors": {
-            "signal_detectors": []
-          }
+        "signal_detectors": []
       })
 
 def create_engine(start_date, tickers, client):
@@ -68,7 +66,7 @@ def get_ticker_ohlc(engine_id, ticker, client):
     response = client.get(url=get_ticker_ohlc_url(engine_id, ticker))
     if response.status_code == HTTPStatus.NO_CONTENT:
         return None
-    return response.text.strip("\"")
+    return response.json()
 
 def add_ticker(engine_id, ticker, client):
     response = client.post(url=get_add_ticker_url(engine_id, ticker))

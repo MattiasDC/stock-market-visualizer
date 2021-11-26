@@ -10,8 +10,8 @@ from .callback_helper import CallbackHelper
 
 logger = get_logger(__name__)
 
-def register_interval_callbacks(app, client_getter, redis_getter):
-    callback_helper = CallbackHelper(client_getter, redis_getter)
+def register_interval_callbacks(app, client_getter):
+    callback_helper = CallbackHelper(client_getter)
 
     @app.callback(
         Output('stock-market-graph', 'figure'),

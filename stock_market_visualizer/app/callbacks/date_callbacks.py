@@ -7,8 +7,8 @@ from utils.dateutils import from_sdate
 import stock_market_visualizer.app.sme_api_helper as api
 from .callback_helper import CallbackHelper
 
-def register_date_callbacks(app, client_getter, redis_getter):
-    callback_helper = CallbackHelper(client_getter, redis_getter)
+def register_date_callbacks(app, client_getter):
+    callback_helper = CallbackHelper(client_getter)
 
     @app.callback(
         Output('date-picker-end', 'min_date_allowed'),

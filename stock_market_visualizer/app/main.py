@@ -6,7 +6,6 @@ from dash_extensions.enrich import DashProxy, MultiplexerTransform
 from stock_market_visualizer.app.config import get_settings
 import stock_market_visualizer.app.layouts as layout
 from stock_market_visualizer.app.callbacks import register_callbacks
-from stock_market_visualizer.app.redis_helper import init_redis_pool
 from stock_market_visualizer.common.requests import ClientSessionGenerator
 
 
@@ -26,15 +25,11 @@ app.layout = layout.get_layout()
 def get_client_generator():
     return server.state.client_generator.get()
 
-def get_redis():
-    return server.state.redis
-
-register_callbacks(app, get_client_generator, get_redis)
+register_callbacks(app, get_client_generator)
 
 @server.on_event("startup")
 async def startup_event():
     server.state.client_generator = ClientSessionGenerator()
-    server.state.redis = init_redis_pool()
 
 if __name__ == '__main__':
     settings = get_settings()
