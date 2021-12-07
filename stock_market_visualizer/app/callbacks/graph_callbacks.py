@@ -8,10 +8,16 @@ from utils.logging import get_logger
 import stock_market_visualizer.app.sme_api_helper as api
 from .callback_helper import CallbackHelper
 
-logger = get_logger(__name__)
-
-def register_interval_callbacks(app, client_getter):
+def register_graph_callbacks(app, client_getter):
     callback_helper = CallbackHelper(client_getter)
+
+    @app.callback(
+        Input('indicator-table', 'data'),
+        Input('engine-id', 'data'),
+        Output('stock-market-graph', 'figure'))
+    def change(rows, engine_id):
+        indicators = callback_helper.get_configured_indicators(rows)
+        return callback_helper.get_traces_and_layout(engine_id, indicators)
 
     @app.callback(
         Output('stock-market-graph', 'figure'),

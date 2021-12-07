@@ -20,8 +20,6 @@ app.title = "Stock Market Engine"
 server = FastAPI()
 server.mount("/sme", WSGIMiddleware(app.server))
 
-app.layout = layout.get_layout()
-
 def get_client_generator():
     return server.state.client_generator.get()
 
@@ -30,6 +28,7 @@ register_callbacks(app, get_client_generator)
 @server.on_event("startup")
 async def startup_event():
     server.state.client_generator = ClientSessionGenerator()
+    app.layout = layout.get_layout(server.state.client_generator.get())
 
 if __name__ == '__main__':
     settings = get_settings()

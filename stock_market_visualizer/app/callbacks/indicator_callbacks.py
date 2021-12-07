@@ -1,6 +1,7 @@
 from dash_extensions.enrich import Output, Input, State
 
 from stock_market_visualizer.app.indicators import get_indicators, get_indicator_factory
+import stock_market_visualizer.app.callbacks.checkable_table_dropdown_callbacks as checkable_table
 from .callback_helper import CallbackHelper
 
 def get_active_ticker(cell, rows):
@@ -9,11 +10,7 @@ def get_active_ticker(cell, rows):
 def register_indicator_callbacks(app, client_getter):
     callback_helper = CallbackHelper(client_getter)
 
-    @app.callback(
-        Input('show-indicator-table', 'value'),
-        Output('collapse-indicator-table', 'is_open'))
-    def toggle_collapse_indicator_table(show_indicator_table):
-        return 'S' in show_indicator_table
+    checkable_table.register_callbacks(app, 'indicator')
 
     @app.callback(
         Input('show-ticker-table', 'value'),
@@ -40,14 +37,6 @@ def register_indicator_callbacks(app, client_getter):
         Output('indicator-table', 'data'))
     def remove_indicator_on_ticker_removal(ticker_rows, indicator_rows, engine_id):
         return [ ir for ir in indicator_rows if {'ticker-col' : ir['ticker-col']} in ticker_rows ]
-
-    @app.callback(
-        Input('indicator-table', 'data'),
-        State('engine-id', 'data'),
-        Output('stock-market-graph', 'figure'))
-    def indicators_change(rows, engine_id):
-        indicators = callback_helper.get_configured_indicators(rows)
-        return callback_helper.get_traces_and_layout(engine_id, indicators)
 
     def add_create_indicator_callbacks(indicator, arguments):
         @app.callback(Input(f'dropdown-{indicator.__name__}', 'n_clicks'),

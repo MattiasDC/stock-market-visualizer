@@ -21,7 +21,6 @@ def register_date_callbacks(app, client_getter):
     @app.callback(
         Output('engine-id', 'data'),
         Output('date-picker-end', 'date'),
-        Output('stock-market-graph', 'figure'),
         Input('date-picker-start', 'date'),
         Input('date-picker-end', 'date'),
         State('date-picker-end', 'min_date_allowed'),
@@ -60,5 +59,4 @@ def register_date_callbacks(app, client_getter):
                 return dash.no_update
         
         api.update_engine(engine_id, end_date, client)
-        indicators = callback_helper.get_configured_indicators(indicator_rows)
-        return engine_id, end_date, callback_helper.get_traces_and_layout(engine_id, indicators)
+        return engine_id, end_date

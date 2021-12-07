@@ -33,6 +33,10 @@ def get_remove_ticker_url(engine_id, ticker):
     settings = get_settings()
     return concat_port(settings.api_url, port=settings.api_port) + f"/removeticker/{engine_id}/{ticker}"    
 
+def get_supported_signal_detectors_url():
+    settings = get_settings()
+    return concat_port(settings.api_url, port=settings.api_port) + f"/getsupportedsignaldetectors"
+
 def get_create_engine_json(start_date, tickers):
     return json.dumps({
         "stock_market": {
@@ -79,3 +83,9 @@ def remove_ticker(engine_id, ticker, client):
     if response.status_code != HTTPStatus.OK:
         return None
     return response.text.strip("\"")
+
+def get_supported_signal_detectors(client):
+    response = client.get(url=get_supported_signal_detectors_url())
+    if response.status_code != HTTPStatus.OK:
+        return None
+    return response.json()

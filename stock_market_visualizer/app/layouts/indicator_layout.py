@@ -4,6 +4,7 @@ from dash import dcc
 from dash import html
 
 from stock_market_visualizer.app.indicators import get_indicators
+from .checkable_table_dropdown_layout import get_checkable_table_dropdown_layout
 
 def get_create_indicator_modals_layout():
     indicators = get_indicators()
@@ -34,28 +35,7 @@ def get_create_indicator_modals_layout():
            for indicator in indicators]
 
 def get_indicator_table_layout():
-	return dbc.Container(children=
-        [
-        dbc.DropdownMenu(
-            id='indicator-dropdown',
-            label="Add Indicator",
-            children=[dbc.DropdownMenuItem(indicator.__name__,
-                                           id=f"dropdown-{indicator.__name__}",
-                                           n_clicks=0) for indicator in get_indicators()],
-            disabled=True),
-        dcc.Checklist(
-            id='show-indicator-table',
-            options=[{'label': ' Show Indicators', 'value': 'S'}],
-            value=['S'],
-            style={'margin-top': 5}),
-        dbc.Collapse(
-            dash_table.DataTable(
-                id='indicator-table',
-                columns=[{'name': 'Indicator', 'id': 'indicator-col'},
-                         {'name': 'Ticker', 'id': 'ticker-col'}],
-                data=[],
-                row_deletable=True,
-                style_table={'margin-top': 5}),
-            id="collapse-indicator-table",
-            is_open=True)
-        ])
+  return get_checkable_table_dropdown_layout("indicator",
+      [ i.__name__ for i in get_indicators()],
+      [{'name': 'Ticker', 'id': 'ticker-col'}],
+      True)

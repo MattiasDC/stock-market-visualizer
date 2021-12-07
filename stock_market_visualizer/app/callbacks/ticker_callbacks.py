@@ -1,23 +1,19 @@
 import dash
 from dash_extensions.enrich import Output, Input, State
 
+import stock_market_visualizer.app.callbacks.checkable_table_dropdown_callbacks as checkable_table
 import stock_market_visualizer.app.sme_api_helper as api
 from .callback_helper import CallbackHelper
 
 def register_ticker_callbacks(app, client_getter):
     callback_helper = CallbackHelper(client_getter)
 
-    @app.callback(
-        Input('show-ticker-table', 'value'),
-        Output('collapse-ticker-table', 'is_open'))
-    def toggle_collapse_ticker_table(show_ticker_table):
-        return 'S' in show_ticker_table
+    checkable_table.register_callbacks(app, 'ticker')
 
     @app.callback(
         Output('ticker-table', 'data'),
         Output('add-ticker-input', 'value'),
         Output('engine-id', 'data'),
-        Output('stock-market-graph', 'figure'),
         Input('add-ticker-button', 'n_clicks'),
         Input('add-ticker-input', 'n_submit'),
         State('add-ticker-input', 'value'),
@@ -44,11 +40,9 @@ def register_ticker_callbacks(app, client_getter):
 
         rows = [{'ticker-col' : ticker} for ticker in api.get_tickers(engine_id, client)]
         api.update_engine(engine_id, end_date, client)
-        indicators = callback_helper.get_configured_indicators(indicator_rows)
-        return rows, "", engine_id, callback_helper.get_traces_and_layout(engine_id, indicators)
+        return rows, "", engine_id
     
     @app.callback(
-        Output('stock-market-graph', 'figure'),
         Output('engine-id', 'data'),
         Output('ticker-table', 'data'),
         Input('ticker-table', 'data_previous'),
@@ -72,5 +66,4 @@ def register_ticker_callbacks(app, client_getter):
             return dash.no_update
     
         rows = [{'ticker-col' : ticker} for ticker in api.get_tickers(engine_id, client)]
-        indicators = callback_helper.get_configured_indicators(indicator_rows)
-        return callback_helper.get_traces_and_layout(engine_id, indicators), engine_id, rows
+        return engine_id, rows
