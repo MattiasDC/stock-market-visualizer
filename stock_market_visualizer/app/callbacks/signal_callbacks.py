@@ -57,11 +57,15 @@ def register_signal_callbacks(app, client_getter):
             Output('engine-id', 'data'),
             Input(f'dropdown-{layouter.name()}', 'n_clicks'),
             State(f'signal-table', 'data'),
-            State(f'engine-id', 'data'))
-        def add_signal_detector(clicks, table, engine_id):
+            State(f'engine-id', 'data'),
+            State('date-picker-end', 'date'))
+        def add_signal_detector(clicks, table, engine_id, end_date):
             if clicks == 0:
                 return dash.no_update, dash.no_update
-            return layouter.create(engine_id)
+            children, engine_id = layouter.create(engine_id)
+            if engine_id is not None:
+                api.update_engine(engine_id, end_date, client)
+            return children, engine_id
 
         @app.callback(
             Output('engine-id', 'data'),
