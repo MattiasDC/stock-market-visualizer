@@ -26,8 +26,9 @@ def register_date_callbacks(app, client_getter):
         State('date-picker-end', 'min_date_allowed'),
         State('engine-id', 'data'),
         State('ticker-table', 'data'),
-        State('indicator-table', 'data'))
-    def update_engine(start_date, end_date, min_end_date, engine_id, ticker_rows, indicator_rows):
+        State('indicator-table', 'data'),
+        State('signal-table', 'data'))
+    def update_engine(start_date, end_date, min_end_date, engine_id, ticker_rows, indicator_rows, signal_detector_rows):
         start_date = from_sdate(start_date)
         min_end_date = from_sdate(min_end_date)
         end_date = from_sdate(end_date)
@@ -44,8 +45,9 @@ def register_date_callbacks(app, client_getter):
     
         client = callback_helper.get_client()
         tickers = callback_helper.get_tickers(ticker_rows)
+        signal_detectors = callback_helper.get_signal_detectors(signal_detector_rows)
         if engine_id is None:
-            engine_id = api.create_engine(start_date, tickers, client)
+            engine_id = api.create_engine(start_date, tickers, signal_detectors, client)
         if engine_id is None:
             return dash.no_update
     
@@ -54,7 +56,7 @@ def register_date_callbacks(app, client_getter):
             return dash.no_update
     
         if engine_start_date != start_date:
-            engine_id = api.create_engine(start_date, tickers, client)
+            engine_id = api.create_engine(start_date, tickers, signal_detectors, client)
             if engine_id is None:
                 return dash.no_update
         

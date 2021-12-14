@@ -49,17 +49,17 @@ def remove_signal_detector_url(engine_id, signal_detector_id):
     settings = get_settings()
     return concat_port(settings.api_url, port=settings.api_port) + f"/removesignaldetector/{engine_id}/{signal_detector_id}"
 
-def get_create_engine_json(start_date, tickers):
+def get_create_engine_json(start_date, tickers, signal_detectors):
     return json.dumps({
         "stock_market": {
             "start_date": start_date.isoformat(),
             "tickers": [{"symbol": ticker} for ticker in tickers]
         },
-        "signal_detectors": []
+        "signal_detectors": signal_detectors
       })
 
-def create_engine(start_date, tickers, client):
-    data = get_create_engine_json(start_date, tickers)
+def create_engine(start_date, tickers, signal_detectors, client):
+    data = get_create_engine_json(start_date, tickers, signal_detectors)
     response = client.post(url=get_create_url(), data=data)
     if response.status_code != HTTPStatus.OK:
         return None

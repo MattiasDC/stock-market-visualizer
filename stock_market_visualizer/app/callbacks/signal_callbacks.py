@@ -48,7 +48,7 @@ def register_signal_callbacks(app, client_getter):
     def update_signal_table(engine_id):
         client = callback_helper.get_client()
         return [{'signal-col' : signal_detector['name'],
-                 'id' : detector_handler[signal_detector['name']].get_id(signal_detector['config'])}
+                 'config' : str(signal_detector['config'])}
                 for signal_detector in api.get_signal_detectors(engine_id, client)]
 
     def register_dropdown_callback(layouter):
@@ -82,7 +82,8 @@ def register_signal_callbacks(app, client_getter):
                 return dash.no_update
 
             assert len(removed_signal_detectors) == 1
-            signal_detector_id = removed_signal_detectors[0]['id']
+            removed_sd = removed_signal_detectors[0]
+            signal_detector_id = detector_handler[removed_sd['signal-col']].get_id(removed_sd['config'])
             client = callback_helper.get_client()
             engine_id = api.remove_signal_detector(engine_id, signal_detector_id, client)
             if engine_id is None:

@@ -20,6 +20,14 @@ class CallbackHelper:
     def get_tickers(self, rows):
         return [row['ticker-col'] for row in rows]
 
+    def get_signal_detectors(self, rows):
+        signal_detectors = []
+        for row in rows:
+            sd = dict(row)
+            sd['name'] = sd.pop('signal-col')
+            signal_detectors.append(sd)
+        return signal_detectors
+
     def get_configured_indicators(self, rows):
         factory = get_indicator_factory()
         indicators_per_ticker = defaultdict(list)
