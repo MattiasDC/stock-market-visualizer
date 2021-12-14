@@ -8,6 +8,8 @@ from utils.logging import get_logger
 import stock_market_visualizer.app.sme_api_helper as api
 from .callback_helper import CallbackHelper
 
+logger = get_logger(__name__)
+
 def register_graph_callbacks(app, client_getter):
     callback_helper = CallbackHelper(client_getter)
 

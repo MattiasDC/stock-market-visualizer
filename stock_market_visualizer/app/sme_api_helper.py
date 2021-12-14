@@ -37,6 +37,18 @@ def get_supported_signal_detectors_url():
     settings = get_settings()
     return concat_port(settings.api_url, port=settings.api_port) + f"/getsupportedsignaldetectors"
 
+def get_signal_detectors_url(engine_id):
+    settings = get_settings()
+    return concat_port(settings.api_url, port=settings.api_port) + f"/signaldetectors/{engine_id}"
+
+def add_signal_detector_url(engine_id):
+    settings = get_settings()
+    return concat_port(settings.api_url, port=settings.api_port) + f"/addsignaldetector/{engine_id}"
+
+def remove_signal_detector_url(engine_id, signal_detector_id):
+    settings = get_settings()
+    return concat_port(settings.api_url, port=settings.api_port) + f"/removesignaldetector/{engine_id}/{signal_detector_id}"
+
 def get_create_engine_json(start_date, tickers):
     return json.dumps({
         "stock_market": {
@@ -89,3 +101,20 @@ def get_supported_signal_detectors(client):
     if response.status_code != HTTPStatus.OK:
         return None
     return response.json()
+
+def get_signal_detectors(engine_id, client):
+    return client.get(url=get_signal_detectors_url(engine_id)).json()
+
+def add_signal_detector(engine_id, signal_detector, client):
+    response = client.post(url=add_signal_detector_url(engine_id), data=json.dumps(signal_detector))
+    if response.status_code != HTTPStatus.OK:
+        return None
+
+    return response.text.strip("\"")
+
+def remove_signal_detector(engine_id, signal_detector_id, client):
+    response = client.post(url=remove_signal_detector_url(engine_id, signal_detector_id))
+    if response.status_code != HTTPStatus.OK:
+        return None
+
+    return response.text.strip("\"")    

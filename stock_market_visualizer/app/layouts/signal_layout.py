@@ -9,9 +9,9 @@ from .checkable_table_dropdown_layout import get_checkable_table_dropdown_layout
 def get_signal_layout(client):
 	return [
         dbc.Col(width=3, children=
-            get_checkable_table_dropdown_layout("signal",
+            get_checkable_table_dropdown_layout('signal',
             get_signal_detectors(client),
             [],
             False)),
-        dbc.Col([])
+        dbc.Col(dbc.Container(id='signal-edit-placeholder'))
         ]

@@ -23,11 +23,10 @@ server.mount("/sme", WSGIMiddleware(app.server))
 def get_client_generator():
     return server.state.client_generator.get()
 
-register_callbacks(app, get_client_generator)
-
 @server.on_event("startup")
 async def startup_event():
     server.state.client_generator = ClientSessionGenerator()
+    register_callbacks(app, get_client_generator)
     app.layout = layout.get_layout(server.state.client_generator.get())
 
 if __name__ == '__main__':
