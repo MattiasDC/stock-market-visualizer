@@ -1,7 +1,7 @@
 from collections import defaultdict
 import pandas as pd
 
-from stock_market.core import OHLC
+from stock_market.core import OHLC, Signal, Sentiment
 from stock_market.core.time_series import make_relative, TimeSeries
 
 import stock_market_visualizer.app.sme_api_helper as api
@@ -50,6 +50,27 @@ class CallbackHelper:
                 
         return traces
 
+    def __get_color(self, sentiment):
+      if sentiment == Sentiment.NEUTRAL:
+        return 'black'
+      elif sentiment == Sentiment.BULLISH:
+        return 'green'
+      assert sentiment == Sentiment.BEARISH
+      return 'red'
+
+    def get_signal_lines(self, engine_id, client):
+      signal_sequence = api.get_signals(engine_id, client)
+      return [dict(type='line',
+                   line=dict(width=1,
+                             color=self.__get_color(s.sentiment)),
+                   x0=s.date,
+                   x1=s.date,
+                   xref='x',
+                   y0=0,
+                   y1=1,
+                   yref='y domain')
+              for s in signal_sequence.signals]
+
     def get_traces(self, engine_id, indicators):
         client = self.__client_getter()
         tickers = api.get_tickers(engine_id, client)
@@ -80,6 +101,7 @@ class CallbackHelper:
                                                                  ticker,
                                                                  close))
         traces.extend(indicator_traces)
+
         return traces
     
     def get_traces_and_layout(self, engine_id, indicators):
@@ -87,4 +109,5 @@ class CallbackHelper:
         layout = {}
         if len(traces) - sum(map(len, indicators.values())) > 1:
             layout['yaxis'] = dict(tickformat=',.1%')
+        layout['shapes'] = self.get_signal_lines(engine_id, self.__client_getter())
         return dict(data=traces, layout=layout)

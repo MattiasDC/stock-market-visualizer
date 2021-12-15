@@ -10,6 +10,7 @@ from utils.logging import get_logger
 
 import stock_market_visualizer.app.callbacks.checkable_table_dropdown_callbacks as checkable_table
 from stock_market_visualizer.app.callbacks.callback_helper import CallbackHelper
+from stock_market_visualizer.app.config import get_settings
 import stock_market_visualizer.app.sme_api_helper as api
 from stock_market_visualizer.app.signals import get_signal_detectors
 
@@ -26,8 +27,10 @@ class EmptyDetectorHandler:
     def create(self, engine_id):
         if engine_id is None:
             return [], dash.no_update
-        engine_id = api.add_signal_detector(engine_id, {"name" : self.name(),
-                                                        "config" : str(randrange(10000000))}, self.__client)
+        engine_id = api.add_signal_detector(engine_id,
+                                            {"name" : self.name(),
+                                             "config" : str(randrange(get_settings().max_id_generator))},
+                                            self.__client)
         return [], engine_id
 
     def get_id(self, config):
