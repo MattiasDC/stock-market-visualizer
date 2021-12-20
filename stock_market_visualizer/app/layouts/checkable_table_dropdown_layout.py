@@ -11,7 +11,7 @@ def get_checkable_table_dropdown_layout(name, items, extra_columns, disabled):
             label=f"Add {name.capitalize()}",
             children=[dbc.DropdownMenuItem(item,
                                            id=f"dropdown-{item}",
-                                           n_clicks=0) for item in items],
+                                           n_clicks=0) for item in sorted(items)],
             disabled=disabled),
         dcc.Checklist(
             id=f'show-{name}-table',

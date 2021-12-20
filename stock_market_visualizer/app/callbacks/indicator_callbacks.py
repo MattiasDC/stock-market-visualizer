@@ -57,9 +57,14 @@ def register_indicator_callbacks(app, client_getter):
                 arguments = [arguments]
 
             created_indicator = indicator(*arguments)
+            created_indicator_json = created_indicator.to_json()
+            for i in indicator_rows:
+                if i['indicator']['config'] == created_indicator_json:
+                    return False, indicator_rows
+
             indicator_rows.append({'indicator-col':str(created_indicator),
                                    'ticker-col': get_active_ticker(ticker_cell, ticker_rows),
-                                   'indicator' : { 'name' : indicator.__name__, "config" : created_indicator.to_json()}}) 
+                                   'indicator' : { 'name' : indicator.__name__, "config" : created_indicator_json}}) 
             return False, indicator_rows
 
     indicators = get_indicators()
