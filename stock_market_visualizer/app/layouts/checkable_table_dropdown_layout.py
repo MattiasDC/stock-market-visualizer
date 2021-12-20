@@ -23,6 +23,8 @@ def get_checkable_table_dropdown_layout(name, items, extra_columns, disabled):
                 id=f'{name}-table',
                 columns=[{'name': f'{name.capitalize()}', 'id': f'{name}-col'}] + extra_columns,
                 data=[],
+                sort_action='native',
+                sort_by=[{'column_id' : f'{name}-col', 'direction' : 'asc'}],
                 row_deletable=True,
                 style_table={'margin-top': 5}),
             id=f"collapse-{name}-table",

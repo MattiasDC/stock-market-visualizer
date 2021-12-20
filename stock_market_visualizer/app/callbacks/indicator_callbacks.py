@@ -22,7 +22,7 @@ def register_indicator_callbacks(app, client_getter):
     @app.callback(
         Input('indicator-dropdown', 'disabled'),
         Input('ticker-table', 'active_cell'),
-        State('ticker-table', 'data'),
+        State('ticker-table', 'derived_virtual_data'),
         Output('indicator-dropdown', 'label'))
     def update_indicator_dropdown_label(disabled, ticker_cell, rows):
         if disabled:
@@ -48,7 +48,7 @@ def register_indicator_callbacks(app, client_getter):
         @app.callback(Input(f'add-{indicator.__name__}', 'n_clicks'),
                       State('indicator-table', 'data'),
                       State('ticker-table', 'active_cell'),
-                      State('ticker-table', 'data'),
+                      State('ticker-table', 'derived_virtual_data'),
                       [State(f'{indicator.__name__}-{argument}-input', 'value') for argument in arguments],
                       Output(f'modal-{indicator.__name__}', 'is_open'),
                       Output('indicator-table', 'data'))
@@ -57,14 +57,12 @@ def register_indicator_callbacks(app, client_getter):
                 arguments = [arguments]
 
             created_indicator = indicator(*arguments)
-            created_indicator_json = created_indicator.to_json()
-            for i in indicator_rows:
-                if i['indicator']['config'] == created_indicator_json:
-                    return False, indicator_rows
-
-            indicator_rows.append({'indicator-col':str(created_indicator),
-                                   'ticker-col': get_active_ticker(ticker_cell, ticker_rows),
-                                   'indicator' : { 'name' : indicator.__name__, "config" : created_indicator_json}}) 
+            new_entry = {'indicator-col':str(created_indicator),
+                         'ticker-col': get_active_ticker(ticker_cell, ticker_rows),
+                         'indicator' : { 'name' : indicator.__name__, "config" : created_indicator.to_json()}}
+            
+            if new_entry not in indicator_rows:
+                indicator_rows.append(new_entry) 
             return False, indicator_rows
 
     indicators = get_indicators()

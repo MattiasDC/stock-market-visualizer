@@ -29,6 +29,8 @@ def get_ticker_table_layout():
                 id='ticker-table',
                 columns=[{'name': 'Ticker', 'id': 'ticker-col'}],
                 data=[],
+                sort_action='native',
+                sort_by=[{'column_id' : 'ticker-col', 'direction' : 'asc'}],
                 row_deletable=True,
                 style_table={'margin-top': 5}),
             id="collapse-ticker-table",
