@@ -22,7 +22,7 @@ def register_indicator_callbacks(app, client_getter):
     @app.callback(
         Input('indicator-dropdown', 'disabled'),
         Input('ticker-table', 'active_cell'),
-        State('ticker-table', 'derived_virtual_data'),
+        Input('ticker-table', 'derived_virtual_data'),
         Output('indicator-dropdown', 'label'))
     def update_indicator_dropdown_label(disabled, ticker_cell, rows):
         if disabled:
