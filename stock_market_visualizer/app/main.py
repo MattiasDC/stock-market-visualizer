@@ -14,7 +14,8 @@ app = DashProxy(__name__,
                 prevent_initial_callbacks=True,
                 transforms=[MultiplexerTransform()],
                 meta_tags=[{"name": "viewport", "content": "width=device-width, initial-scale=1"}],
-                external_stylesheets=layout.get_themes())
+                external_stylesheets=layout.get_themes(),
+                assets_folder='./assets')
 app.title = "Stock Market Engine"
 
 server = FastAPI()
@@ -26,8 +27,8 @@ def get_client_generator():
 @server.on_event("startup")
 async def startup_event():
     server.state.client_generator = ClientSessionGenerator()
-    register_callbacks(app, get_client_generator)
     app.layout = layout.get_layout(server.state.client_generator.get())
+    register_callbacks(app, get_client_generator)
 
 if __name__ == '__main__':
     settings = get_settings()

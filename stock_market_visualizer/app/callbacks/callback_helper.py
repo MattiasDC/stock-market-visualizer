@@ -52,7 +52,7 @@ class CallbackHelper:
 
     def __get_color(self, sentiment):
       if sentiment == Sentiment.NEUTRAL:
-        return 'black'
+        return 'grey'
       elif sentiment == Sentiment.BULLISH:
         return 'green'
       assert sentiment == Sentiment.BEARISH
