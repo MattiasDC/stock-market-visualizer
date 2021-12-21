@@ -1,5 +1,7 @@
 from collections import defaultdict
+import datetime as dt
 import pandas as pd
+import plotly.graph_objects as go
 
 from stock_market.core import OHLC, Signal, Sentiment
 from stock_market.core.time_series import make_relative, TimeSeries
@@ -36,19 +38,17 @@ class CallbackHelper:
                                                                            row['indicator']['config']))
         return indicators_per_ticker
 
-    def create_indicator_traces(self, indicators_per_ticker, ticker, ticker_values):
-        traces = []
+    def create_indicator_traces(self, indicators_per_ticker, ticker, ticker_values, figure):
         for indicator in indicators_per_ticker[ticker]:
             for indicator_values in [indicator(TimeSeries(ticker, pd.concat([ticker_values.dates,
                                                                              ticker_values.values],
                                                                              axis=1)))]:
-                traces.append(dict(type="scatter",
-                                   x=indicator_values.dates,
-                                   y=indicator_values.values,
-                                   name=indicator_values.name,
-                                   mode="lines"))
+                figure.add_trace(go.Scatter(x=indicator_values.dates,
+                                            y=indicator_values.values,
+                                            name=indicator_values.name,
+                                            mode="lines"))
                 
-        return traces
+        return figure
 
     def __get_color(self, sentiment):
       if sentiment == Sentiment.NEUTRAL:
@@ -58,24 +58,30 @@ class CallbackHelper:
       assert sentiment == Sentiment.BEARISH
       return 'red'
 
-    def get_signal_lines(self, engine_id, client):
+    def get_signal_lines(self, engine_id, client, figure):
       signal_sequence = api.get_signals(engine_id, client)
-      return [dict(type='line',
-                   line=dict(width=1,
-                             color=self.__get_color(s.sentiment)),
-                   x0=s.date,
-                   x1=s.date,
-                   xref='x',
-                   y0=0,
-                   y1=1,
-                   yref='y domain')
-              for s in signal_sequence.signals]
+      date_dict = defaultdict(list)
+      for s in signal_sequence.signals:
+        date_dict[s.date].append(s)
 
-    def get_traces(self, engine_id, indicators):
+      for date, signals in date_dict.items():
+        for s in signals[:-1]:
+
+          figure.add_vrect(x0=date,
+                           x1=date,
+                           line_color=self.__get_color(s.sentiment))
+        figure.add_vrect(x0=date,
+                         x1=date,
+                         line_color=self.__get_color(signals[-1].sentiment),
+                         annotation_text=", ".join([s.name for s in signals]),
+                         annotation_position="top left")
+      return figure
+
+    def get_traces(self, engine_id, indicators, figure):
         client = self.__client_getter()
         tickers = api.get_tickers(engine_id, client)
         if len(tickers) == 0:
-            return []
+            return figure, 0
 
         closes = {}
         for ticker in tickers:
@@ -89,25 +95,22 @@ class CallbackHelper:
             closes = {ticker : TimeSeries(ticker, pd.concat([relative_close.dates, relative_close.values-1], axis=1))
                       for ticker, relative_close in closes}
 
-        traces = [dict(type="scatter",
-                       x=close.dates,
-                       y=close.values,
-                       name=ticker,
-                       mode="lines") for ticker, close in closes.items()]
-
-        indicator_traces = []
         for ticker, close in closes.items():
-            indicator_traces.extend(self.create_indicator_traces(indicators,
-                                                                 ticker,
-                                                                 close))
-        traces.extend(indicator_traces)
+          figure.add_trace(go.Scatter(x=close.dates, y=close.values, name=ticker, mode="lines"))
 
-        return traces
+        for ticker, close in closes.items():
+            figure = self.create_indicator_traces(indicators,
+                                                  ticker,
+                                                  close,
+                                                  figure)
+        return figure, len(closes)
     
     def get_traces_and_layout(self, engine_id, indicators):
-        traces = self.get_traces(engine_id, indicators)
+        figure = go.Figure()
+        figure, nof_ticker_lines = self.get_traces(engine_id, indicators, figure)
         layout = {}
-        if len(traces) - sum(map(len, indicators.values())) > 1:
-            layout['yaxis'] = dict(tickformat=',.1%')
-        layout['shapes'] = self.get_signal_lines(engine_id, self.__client_getter())
-        return dict(data=traces, layout=layout)
+        if nof_ticker_lines - sum(map(len, indicators.values())) > 1:
+            figure.update_yaxes(tickformat=',.1%')
+        figure = self.get_signal_lines(engine_id, self.__client_getter(), figure)
+        figure.update_layout(template='plotly_white')
+        return figure
