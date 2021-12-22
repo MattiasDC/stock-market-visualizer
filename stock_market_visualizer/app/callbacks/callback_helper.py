@@ -1,5 +1,6 @@
 from collections import defaultdict
 import datetime as dt
+import json
 import pandas as pd
 import plotly.graph_objects as go
 
@@ -74,7 +75,8 @@ class CallbackHelper:
                          x1=date,
                          line_color=self.__get_color(signals[-1].sentiment),
                          annotation_text=", ".join([s.name for s in signals]),
-                         annotation_position="top left")
+                         annotation_position="top left",
+                         annotation_textangle=90)
       return figure
 
     def get_traces(self, engine_id, indicators, figure):

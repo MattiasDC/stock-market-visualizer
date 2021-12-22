@@ -2,6 +2,7 @@ import dash
 from dash import dcc
 from dash import html
 from dash_extensions.enrich import Output, Input, State
+import json
 from random import randrange
 
 from utils.logging import get_logger
@@ -42,12 +43,19 @@ class TickerBasedDetectorHandler:
         self.__app = app
         self.__client = client
         self.__detector_cls = detector_cls
+        self.__active_ticker = None
 
         @self.__app.callback(
             Output(f'config-dropdown-ticker-{self.name()}', 'options'),
             Input('engine-id', 'data'))
         def update_dropdown_list(engine_id):
             return self.__get_options(engine_id)
+
+        @self.__app.callback(
+            Input(f'config-dropdown-ticker-{self.name()}', 'value'),
+            Output('signal-data-placeholder', 'data'))
+        def update_active_ticker(ticker_value):
+            return ticker_value
 
     def name(self):
         return self.__detector_cls.NAME()
@@ -60,6 +68,19 @@ class TickerBasedDetectorHandler:
         if engine_id is None:
             return None
         return engine_id
+
+    def create(self, engine_id, data):
+        new_engine_id = api.add_signal_detector(engine_id,
+                                            {"name" : self.name(),
+                                             "config" : json.dumps({"id" : randrange(get_settings().max_id_generator),
+                                                                    "ticker" : json.dumps(data)})},
+                                            self.__client)
+        api.update_engine(new_engine_id, api.get_date(new_engine_id, self.__client), self.__client)
+        return new_engine_id
+
+    def get_id(self, config):
+        return json.loads(config)['id']
+
 
 def register_signal_callbacks(app, client_getter):
     callback_helper = CallbackHelper(client_getter)
@@ -84,8 +105,22 @@ def register_signal_callbacks(app, client_getter):
     def update_signal_table(engine_id):
         client = callback_helper.get_client()
         return [{'signal-col' : signal_detector['name'],
-                 'config' : str(signal_detector['config'])}
+                 'config' : json.dumps(signal_detector['config'])}
                 for signal_detector in api.get_signal_detectors(engine_id, client)]
+
+    @app.callback(
+        Output('engine-id', 'data'),
+        Output('signal-edit-placeholder', 'hidden'),
+        Input('signal-add', 'n_clicks'),
+        State('engine-id', 'data'),
+        State('signal-edit-legend', 'children'),
+        State('signal-data-placeholder', 'data'))
+    def add_signal_detector(n_clicks, engine_id, handler_name, data):
+        if n_clicks == 0:
+            return dash.no_update, dash.no_update
+        handler = detector_handlers[handler_name]
+        new_engine_id = handler.create(engine_id, data)
+        return new_engine_id, new_engine_id != engine_id
 
     def register_dropdown_callback(handler):
         @app.callback(

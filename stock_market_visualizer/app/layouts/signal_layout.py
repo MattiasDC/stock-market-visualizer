@@ -36,6 +36,6 @@ def get_signal_layout(client):
                           hidden=True,
                           children=[html.Fieldset(id='signal-edit-fieldset',
         					                      className='border p-2',
-        					                      children=config_layouts),
-                                    dbc.Button("Add", style={'margin-top': 5})]))
+        					                      children=config_layouts + [dcc.Store(id='signal-data-placeholder')]),
+                                    dbc.Button("Add", id='signal-add', n_clicks=0, style={'margin-top': 5})]))
         ]
