@@ -15,20 +15,23 @@ def register_ticker_callbacks(app, client_getter):
         Input('engine-id', 'data'))
     def update_ticker_table(engine_id):
         client = callback_helper.get_client()
-        return [{'ticker-col' : ticker} for ticker in api.get_tickers(engine_id, client)]
+        tickers = api.get_tickers(engine_id, client)
+        return [{'ticker-col' : ticker} for ticker in tickers]
 
     @app.callback(
         Output('add-ticker-input', 'value'),
         Output('engine-id', 'data'),
+        Output('ticker-table', 'selected_rows'),
         Input('add-ticker-button', 'n_clicks'),
         Input('add-ticker-input', 'n_submit'),
         State('add-ticker-input', 'value'),
         State('engine-id', 'data'),
         State('ticker-table', 'data'),
-        State('date-picker-end', 'date'))
-    def add_ticker(n_clicks, n_submit, ticker_symbol, engine_id, rows, end_date):
+        State('date-picker-end', 'date'),
+        State('ticker-table', 'selected_rows'))
+    def add_ticker(n_clicks, n_submit, ticker_symbol, engine_id, rows, end_date, selected_tickers):
         ticker_symbol = str.upper(ticker_symbol.rstrip())
-        no_update = (dash.no_update, dash.no_update) 
+        no_update = (dash.no_update, dash.no_update, dash.no_update) 
         if ticker_symbol in callback_helper.get_tickers(rows) or not ticker_symbol:
             return no_update
     
@@ -43,25 +46,28 @@ def register_ticker_callbacks(app, client_getter):
         if engine_id is None:
             return no_update
 
+        selected_tickers.append(len(rows))
         api.update_engine(engine_id, end_date, client)
-        return "", engine_id
+        return "", engine_id, selected_tickers
     
     @app.callback(
         Output('engine-id', 'data'),
+        Output('ticker-table', 'selected_rows'),
         Input('ticker-table', 'data_timestamp'),
         State('ticker-table', 'data_previous'),
         State('ticker-table', 'data'),
-        State('engine-id', 'data'))
-    def remove_ticker(timestamp, previous, current, engine_id):
+        State('engine-id', 'data'),
+        State('ticker-table', 'selected_rows'))
+    def remove_ticker(timestamp, previous, current, engine_id, selected_tickers):
         if previous is None:
-            return dash.no_update
+            return dash.no_update, dash.no_update
     
         if engine_id is None:
-            return dash.no_update
+            return dash.no_update, dash.no_update
     
         removed_ticker_symbols = [row for row in previous if row not in current]
         if not removed_ticker_symbols:
-            return dash.no_update
+            return dash.no_update, dash.no_update
         
         assert len(removed_ticker_symbols) == 1
         ticker_symbol = next(iter(removed_ticker_symbols[0].values()))
@@ -69,6 +75,7 @@ def register_ticker_callbacks(app, client_getter):
         client = callback_helper.get_client()
         engine_id = api.remove_ticker(engine_id, ticker_symbol, client)
         if engine_id is None:
-            return dash.no_update
+            return dash.no_update, dash.no_update
     
-        return engine_id
+        index = current.index(ticker_symbol) if ticker_symbol in current else -1
+        return engine_id, [i for i in selected_tickers if i != index]

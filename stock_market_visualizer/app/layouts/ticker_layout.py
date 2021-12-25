@@ -30,6 +30,8 @@ def get_ticker_table_layout():
                 columns=[{'name': 'Ticker', 'id': 'ticker-col'}],
                 data=[],
                 sort_action='native',
+                row_selectable="multi",
+                selected_rows=[],
                 sort_by=[{'column_id' : 'ticker-col', 'direction' : 'asc'}],
                 row_deletable=True,
                 style_table={'margin-top': 5}),

@@ -11,6 +11,7 @@ def register_indicator_callbacks(app, client_getter):
     callback_helper = CallbackHelper(client_getter)
 
     checkable_table.register_callbacks(app, 'indicator')
+    indicators = get_indicators()
 
     @app.callback(
         Input('show-ticker-table', 'value'),
@@ -49,22 +50,25 @@ def register_indicator_callbacks(app, client_getter):
                       State('indicator-table', 'data'),
                       State('ticker-table', 'active_cell'),
                       State('ticker-table', 'derived_virtual_data'),
+                      State('indicator-table', 'selected_rows'),
                       [State(f'{indicator.__name__}-{argument}-input', 'value') for argument in arguments],
                       Output(f'modal-{indicator.__name__}', 'is_open'),
-                      Output('indicator-table', 'data'))
-        def create_indicator(n_clicks, indicator_rows, ticker_cell, ticker_rows, arguments):
+                      Output('indicator-table', 'data'),
+                      Output('indicator-table', 'selected_rows'))
+        def create_indicator(n_clicks, indicator_rows, ticker_cell, ticker_rows, selected_indicators, arguments):
             if not isinstance(arguments, list):
                 arguments = [arguments]
 
             created_indicator = indicator(*arguments)
             new_entry = {'indicator-col':str(created_indicator),
                          'ticker-col': get_active_ticker(ticker_cell, ticker_rows),
-                         'indicator' : { 'name' : indicator.__name__, "config" : created_indicator.to_json()}}
+                         'indicator' : { 'name' : indicator.__name__,
+                                         'config' : created_indicator.to_json()}}
             
             if new_entry not in indicator_rows:
                 indicator_rows.append(new_entry) 
-            return False, indicator_rows
+                selected_indicators.append(len(indicator_rows)-1)
+            return False, indicator_rows, selected_indicators
 
-    indicators = get_indicators()
     for indicator in indicators:
         add_create_indicator_callbacks(indicator, indicators[indicator])

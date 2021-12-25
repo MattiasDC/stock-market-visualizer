@@ -26,6 +26,8 @@ def get_checkable_table_dropdown_layout(name, items, extra_columns, disabled):
                 sort_action='native',
                 sort_by=[{'column_id' : f'{name}-col', 'direction' : 'asc'}],
                 row_deletable=True,
+                row_selectable="multi",
+                selected_rows=[],
                 style_table={'margin-top': 5}),
             id=f"collapse-{name}-table",
             is_open=True)

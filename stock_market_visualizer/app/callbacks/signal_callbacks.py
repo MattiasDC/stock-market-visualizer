@@ -29,7 +29,7 @@ class EmptyDetectorHandler:
         if engine_id is None:
             return None
         engine_id = api.add_signal_detector(engine_id,
-                                            {"name" : self.name(),
+                                            {"static_name" : self.name(),
                                              "config" : str(randrange(get_settings().max_id_generator))},
                                             self.__client)
         api.update_engine(engine_id, api.get_date(engine_id, self.__client), self.__client)
@@ -71,7 +71,7 @@ class TickerBasedDetectorHandler:
 
     def create(self, engine_id, data):
         new_engine_id = api.add_signal_detector(engine_id,
-                                            {"name" : self.name(),
+                                            {"static_name" : self.name(),
                                              "config" : json.dumps({"id" : randrange(get_settings().max_id_generator),
                                                                     "ticker" : json.dumps(data)})},
                                             self.__client)
@@ -80,7 +80,6 @@ class TickerBasedDetectorHandler:
 
     def get_id(self, config):
         return json.loads(config)['id']
-
 
 def register_signal_callbacks(app, client_getter):
     callback_helper = CallbackHelper(client_getter)
@@ -105,35 +104,51 @@ def register_signal_callbacks(app, client_getter):
     def update_signal_table(engine_id):
         client = callback_helper.get_client()
         return [{'signal-col' : signal_detector['name'],
+                 'name' : signal_detector['static_name'],
                  'config' : json.dumps(signal_detector['config'])}
                 for signal_detector in api.get_signal_detectors(engine_id, client)]
 
     @app.callback(
         Output('engine-id', 'data'),
         Output('signal-edit-placeholder', 'hidden'),
+        Output('signal-table', 'selected_rows'),
         Input('signal-add', 'n_clicks'),
         State('engine-id', 'data'),
         State('signal-edit-legend', 'children'),
-        State('signal-data-placeholder', 'data'))
-    def add_signal_detector(n_clicks, engine_id, handler_name, data):
+        State('signal-data-placeholder', 'data'),
+        State('signal-table', 'selected_rows'))
+    def add_signal_detector(n_clicks, engine_id, handler_name, data, selected_signal_detectors):
         if n_clicks == 0:
-            return dash.no_update, dash.no_update
+            return dash.no_update, dash.no_update, dash.no_update
         handler = detector_handlers[handler_name]
+
+        signal_detectors_before = api.get_signal_detectors(engine_id, client)
         new_engine_id = handler.create(engine_id, data)
-        return new_engine_id, new_engine_id != engine_id
+        signal_detectors_after = api.get_signal_detectors(new_engine_id, client)
+
+        if signal_detectors_before != signal_detectors_after:
+            assert len(signal_detectors_after) - len(signal_detectors_before) == 1
+            selected_signal_detectors.append(len(signal_detectors_before))
+
+        return new_engine_id, new_engine_id != engine_id, selected_signal_detectors
 
     def register_dropdown_callback(handler):
         @app.callback(
             Output('engine-id', 'data'),
             Output('signal-edit-fieldset', 'children'),
             Output('signal-edit-placeholder', 'hidden'),
+            Output('signal-table', 'selected_rows'),
             Input(f'dropdown-{handler.name()}', 'n_clicks'),
             State('signal-edit-fieldset', 'children'),
-            State('engine-id', 'data'))
-        def add_signal_detector(clicks, fieldset_children, engine_id):
+            State('engine-id', 'data'),
+            State('signal-table', 'selected_rows'))
+        def add_signal_detector(clicks, fieldset_children, engine_id, selected_signal_detectors):
             if clicks == 0:
-                return dash.no_update, dash.no_update
+                return dash.no_update, dash.no_update, dash.no_update, dash.no_update
+            signal_detectors_before = api.get_signal_detectors(engine_id, client)
             engine_id = handler.activate(engine_id)
+            signal_detectors_after = api.get_signal_detectors(engine_id, client)
+
             hide_fieldset = False
             for child in fieldset_children:
                 child_props = child['props']
@@ -148,7 +163,10 @@ def register_signal_callbacks(app, client_getter):
                     else:
                         hide_fieldset = True
 
-            return engine_id, fieldset_children, hide_fieldset
+            if signal_detectors_before != signal_detectors_after:
+                assert len(signal_detectors_after) - len(signal_detectors_before) == 1
+                selected_signal_detectors.append(len(signal_detectors_before))
+            return engine_id, fieldset_children, hide_fieldset, selected_signal_detectors
 
         @app.callback(
             Output('engine-id', 'data'),
@@ -166,7 +184,7 @@ def register_signal_callbacks(app, client_getter):
 
             assert len(removed_signal_detectors) == 1
             removed_sd = removed_signal_detectors[0]
-            signal_detector_id = detector_handlers[removed_sd['signal-col']].get_id(removed_sd['config'])
+            signal_detector_id = detector_handlers[removed_sd['name']].get_id(removed_sd['config'])
             client = callback_helper.get_client()
             engine_id = api.remove_signal_detector(engine_id, signal_detector_id, client)
             if engine_id is None:

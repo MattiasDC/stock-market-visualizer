@@ -27,7 +27,8 @@ class CallbackHelper:
         signal_detectors = []
         for row in rows:
             sd = dict(row)
-            sd['name'] = sd.pop('signal-col')
+            sd.pop('signal-col')
+            sd['static_name'] = sd.pop('name')
             signal_detectors.append(sd)
         return signal_detectors
 
@@ -113,6 +114,7 @@ class CallbackHelper:
         layout = {}
         if nof_ticker_lines - sum(map(len, indicators.values())) > 1:
             figure.update_yaxes(tickformat=',.1%')
-        figure = self.get_signal_lines(engine_id, self.__client_getter(), figure)
+        if nof_ticker_lines > 0:
+            figure = self.get_signal_lines(engine_id, self.__client_getter(), figure)
         figure.update_layout(template='plotly_white')
         return figure
