@@ -96,9 +96,9 @@ class CallbackHelper:
                          annotation_textangle=90)
       return figure
 
-    def get_traces(self, engine_id, indicators, figure):
+    def get_traces(self, engine_id, indicators, figure, selected_tickers):
         client = self.__client_getter()
-        tickers = api.get_tickers(engine_id, client)
+        tickers = [t for i, t in enumerate(api.get_tickers(engine_id, client)) if i in selected_tickers]
         if len(tickers) == 0:
             return figure, 0
 
@@ -124,9 +124,9 @@ class CallbackHelper:
                                                   figure)
         return figure, len(closes)
     
-    def get_traces_and_layout(self, engine_id, indicators, selected_signal_indices):
+    def get_traces_and_layout(self, engine_id, indicators, selected_tickers, selected_signal_indices):
         figure = go.Figure()
-        figure, nof_ticker_lines = self.get_traces(engine_id, indicators, figure)
+        figure, nof_ticker_lines = self.get_traces(engine_id, indicators, figure, selected_tickers)
         layout = {}
         if nof_ticker_lines - sum(map(len, indicators.values())) > 1:
             figure.update_yaxes(tickformat=',.1%')

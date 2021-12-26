@@ -17,10 +17,11 @@ def register_graph_callbacks(app, client_getter):
         Output('stock-market-graph', 'figure'),
         Input('indicator-table', 'data'),
         Input('engine-id', 'data'),
+        Input('ticker-table', 'selected_rows'),
         Input('signal-table', 'selected_rows'))
-    def change(rows, engine_id, selected_signal_rows):
+    def change(rows, engine_id, selected_ticker_rows, selected_signal_rows):
         indicators = callback_helper.get_configured_indicators(rows)
-        return callback_helper.get_traces_and_layout(engine_id, indicators, selected_signal_rows)
+        return callback_helper.get_traces_and_layout(engine_id, indicators, selected_ticker_rows, selected_signal_rows)
 
     @app.callback(
         Output('stock-market-graph', 'figure'),
@@ -28,8 +29,9 @@ def register_graph_callbacks(app, client_getter):
         State('date-picker-end', 'date'),
         State('engine-id', 'data'),
         State('indicator-table', 'data'),
+        State('ticker-table', 'selected_rows'),
         State('signal-table', 'selected_rows'))
-    def update_on_interval(n_intervals, end_date, engine_id, indicator_rows, selected_signal_rows):
+    def update_on_interval(n_intervals, end_date, engine_id, indicator_rows, selected_ticker_rows, selected_signal_rows):
         end_date = from_sdate(end_date) 
         if end_date is None or end_date < dt.datetime.now().date():
             return dash.no_update
@@ -38,4 +40,4 @@ def register_graph_callbacks(app, client_getter):
         client = callback_helper.get_client()
         api.update_engine(engine_id, end_date, client)
         indicators = callback_helper.get_configured_indicators(indicator_rows)
-        return callback_helper.get_traces_and_layout(engine_id, indicators, selected_signal_rows)
+        return callback_helper.get_traces_and_layout(engine_id, indicators, selected_ticker_rows, selected_signal_rows)
