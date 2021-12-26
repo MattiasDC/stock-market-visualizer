@@ -40,6 +40,8 @@ if __name__ == '__main__':
     uvicorn.run("main:server",
                 host=settings.host_url,
                 port=settings.port,
+                ssl_keyfile=settings.ssl_keyfile,
+                ssl_certfile=settings.ssl_certfile,
                 reload=settings.debug,
                 log_level='warning',
                 use_colors=True)

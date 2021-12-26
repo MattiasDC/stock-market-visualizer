@@ -10,7 +10,7 @@ def get_ticker_table_layout():
             [
             dbc.Input(
                 id='add-ticker-input',
-                placeholder='Ticker',
+                placeholder='Yahoo Ticker',
                 n_submit=0),
             html.Div(dbc.Button('Add',
                 id='add-ticker-button',

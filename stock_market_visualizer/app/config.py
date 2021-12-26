@@ -8,6 +8,8 @@ logger = get_logger(__name__)
 class Settings(BaseSettings):
     host_url: str = os.environ.get("HOST_URL", "0.0.0.0")
     port: int = os.environ.get("PORT", 8000)
+    ssl_keyfile: str = os.environ.get("SSL_KEYFILE", "0.0.0.0-key.pem")
+    ssl_certfile: str = os.environ.get("SSL_KEYFILE", "0.0.0.0.pem")
     api_url: AnyUrl = os.getenv("API_URL", "http://sme-api-smv")
     api_port: int = os.getenv("API_PORT", 8001)
     debug: bool = os.getenv("DEBUG", False)

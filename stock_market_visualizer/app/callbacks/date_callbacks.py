@@ -20,12 +20,6 @@ def register_date_callbacks(app, client_getter):
         return start_date
 
     @app.callback(
-        Output('date-picker-start', 'date'),
-        Input('engine-id', 'data'))
-    def sync_start_date(engine_id):
-        return api.get_start_date(engine_id, client)
-
-    @app.callback(
         Output('engine-id', 'data'),
         Output('date-picker-end', 'date'),
         Input('date-picker-start', 'date'),

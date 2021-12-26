@@ -16,8 +16,11 @@ def get_layout(client):
     return dbc.Container(children=
         [
         dcc.Location(id='url', refresh=False),
-        dcc.Store(id='restoreable-state-id'),
-        html.H1('Stock Market Engine'),
+        dcc.Store(id='restoreable-state'),
+        html.H1(children=['Stock Market Engine',
+                          dcc.Clipboard(id="url-copy",
+                                        title='copy url',
+                                        style={"margin-left" : 5, "fontSize": 30, "display": "inline-block"})]),
         dbc.Container(
             [
              dbc.Row(

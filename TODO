@@ -1,4 +1,4 @@
-Sort tickers/indicators/signals tables
-Sort dropdowns
-Disable configuration when not showing signals
-Disable config when adding signal
+Create restoreable state from url
+cache queries from engine (when engine changes on update)
+Implement Crossover signal configuration
+Make title editable (Is Puru Hedged?)
