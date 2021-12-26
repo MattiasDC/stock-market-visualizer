@@ -15,6 +15,8 @@ def get_themes():
 def get_layout(client):
     return dbc.Container(children=
         [
+        dcc.Location(id='url', refresh=False),
+        dcc.Store(id='restoreable-state-id'),
         html.H1('Stock Market Engine'),
         dbc.Container(
             [

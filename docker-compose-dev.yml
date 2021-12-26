@@ -9,9 +9,11 @@ services:
       - 8000:8000
     depends_on:
       - api
+      - redis
     environment:
       - DEBUG=True
       - MAX_TICKER_SYMBOL_LENGTH=10
+      - REDIS_DB=0
     volumes:
       - .:/app
 

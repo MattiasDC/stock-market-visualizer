@@ -9,6 +9,7 @@ from .callback_helper import CallbackHelper
 
 def register_date_callbacks(app, client_getter):
     callback_helper = CallbackHelper(client_getter)
+    client = callback_helper.get_client()
 
     @app.callback(
         Output('date-picker-end', 'min_date_allowed'),
@@ -17,6 +18,13 @@ def register_date_callbacks(app, client_getter):
         if start_date is None:
             return dash.no_update
         return start_date
+
+    @app.callback(
+        Output('date-picker-start', 'date'),
+        Output('date-picker-end', 'date'),
+        Input('engine-id', 'data'))
+    def sync_dates(engine_id):
+        return api.get_start_date(engine_id, client), api.get_date(engine_id, client)
 
     @app.callback(
         Output('engine-id', 'data'),
@@ -43,7 +51,6 @@ def register_date_callbacks(app, client_getter):
         if end_date < min_end_date:
             return dash.no_update
     
-        client = callback_helper.get_client()
         tickers = callback_helper.get_tickers(ticker_rows)
         signal_detectors = callback_helper.get_signal_detectors(signal_detector_rows)
         if engine_id is None:
