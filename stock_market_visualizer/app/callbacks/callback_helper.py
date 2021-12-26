@@ -34,12 +34,13 @@ class CallbackHelper:
             signal_detectors.append(sd)
         return signal_detectors
 
-    def get_configured_indicators(self, rows):
+    def get_configured_indicators(self, rows, selected_rows):
         factory = get_indicator_factory()
         indicators_per_ticker = defaultdict(list)
-        for row in rows:
-            indicators_per_ticker[row['ticker-col']].append(factory.create(row['indicator']['name'],
-                                                                           row['indicator']['config']))
+        for i, row in enumerate(rows):
+            if i in selected_rows:
+              indicators_per_ticker[row['ticker-col']].append(factory.create(row['indicator']['name'],
+                                                                             row['indicator']['config']))
         return indicators_per_ticker
 
     def create_indicator_traces(self, indicators_per_ticker, ticker, ticker_values, figure):
