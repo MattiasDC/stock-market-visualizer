@@ -6,6 +6,8 @@ import plotly.graph_objects as go
 
 from stock_market.core import OHLC, Signal, Sentiment
 from stock_market.core.time_series import make_relative, TimeSeries
+from stock_market.ext.signal import register_signal_detector_factories
+from stock_market.common.factory import Factory
 
 import stock_market_visualizer.app.sme_api_helper as api
 from stock_market_visualizer.app.indicators import get_indicator_factory
@@ -60,18 +62,32 @@ class CallbackHelper:
       assert sentiment == Sentiment.BEARISH
       return 'red'
 
-    def get_signal_lines(self, engine_id, client, figure):
+    def __get_enabled_signal_detectors(self, engine_id, client, enabled_signal_detectors):
+      signal_detector_factory = register_signal_detector_factories(Factory())      
+      enabled_signal_detector_ids = []
+      for i, sd in enumerate(api.get_signal_detectors(engine_id, client)):
+        config = sd['config']
+        if type(config) is not str:
+          config = json.dumps(config)
+        signal_detector = signal_detector_factory.create(sd['static_name'], config)
+        if i in enabled_signal_detectors:
+          enabled_signal_detector_ids.append(signal_detector.id)
+      return enabled_signal_detector_ids
+
+    def get_signal_lines(self, engine_id, client, figure, enabled_signal_detectors):
+      enabled_signal_detector_ids = self.__get_enabled_signal_detectors(engine_id, client, enabled_signal_detectors)
       signal_sequence = api.get_signals(engine_id, client)
       date_dict = defaultdict(list)
       for s in signal_sequence.signals:
-        date_dict[s.date].append(s)
+        if s.id in enabled_signal_detector_ids:
+          date_dict[s.date].append(s)
 
       for date, signals in date_dict.items():
         for s in signals[:-1]:
-
           figure.add_vrect(x0=date,
                            x1=date,
                            line_color=self.__get_color(s.sentiment))
+
         figure.add_vrect(x0=date,
                          x1=date,
                          line_color=self.__get_color(signals[-1].sentiment),
@@ -108,13 +124,13 @@ class CallbackHelper:
                                                   figure)
         return figure, len(closes)
     
-    def get_traces_and_layout(self, engine_id, indicators):
+    def get_traces_and_layout(self, engine_id, indicators, selected_signal_indices):
         figure = go.Figure()
         figure, nof_ticker_lines = self.get_traces(engine_id, indicators, figure)
         layout = {}
         if nof_ticker_lines - sum(map(len, indicators.values())) > 1:
             figure.update_yaxes(tickformat=',.1%')
         if nof_ticker_lines > 0:
-            figure = self.get_signal_lines(engine_id, self.__client_getter(), figure)
+            figure = self.get_signal_lines(engine_id, self.__client_getter(), figure, selected_signal_indices)
         figure.update_layout(template='plotly_white')
         return figure
