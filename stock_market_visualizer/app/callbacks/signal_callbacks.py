@@ -47,9 +47,14 @@ class TickerBasedDetectorHandler:
 
         @self.__app.callback(
             Output(f'config-dropdown-ticker-{self.name()}', 'options'),
-            Input('engine-id', 'data'))
-        def update_dropdown_list(engine_id):
-            return self.__get_options(engine_id)
+            Output(f'config-dropdown-ticker-{self.name()}', 'value'),
+            Input('engine-id', 'data'),
+            State(f'config-dropdown-ticker-{self.name()}', 'value'))
+        def update_dropdown_list(engine_id, value):
+            options = self.__get_options(engine_id)
+            if len(options) == 1:
+                value = options[0]['value']
+            return options, value
 
         @self.__app.callback(
             Input(f'config-dropdown-ticker-{self.name()}', 'value'),
