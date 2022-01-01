@@ -1,3 +1,4 @@
+import datetime as dt
 import os
 from functools import cache
 from pydantic import AnyUrl, BaseSettings
@@ -20,6 +21,8 @@ class Settings(BaseSettings):
     redis_url: AnyUrl = os.environ.get("REDIS_URL", "redis://redis")
     redis_port: int = os.getenv("REDIS_PORT", 6379)
     redis_db: int = os.getenv("REDIS_DB", 0)
+    redis_restoreable_state_expiration_time : dt.timedelta =\
+        dt.timedelta(days=os.getenv("REDIS_RESTOREABLE_STATE_EXPIRATION_DAYS", 30))
 
 @cache
 def get_settings() -> BaseSettings:

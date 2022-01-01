@@ -20,6 +20,7 @@ def get_layout(client):
         html.H1(children=['Stock Market Engine',
                           dcc.Clipboard(id="url-copy",
                                         title='copy url',
+                                        n_clicks=0,
                                         style={"margin-left" : 5, "fontSize": 30, "display": "inline-block"})]),
         dbc.Container(
             [

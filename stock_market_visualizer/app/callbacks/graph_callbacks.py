@@ -6,6 +6,7 @@ from utils.dateutils import from_sdate
 from utils.logging import get_logger
 
 import stock_market_visualizer.app.sme_api_helper as api
+from stock_market_visualizer.app.config import get_settings
 from .callback_helper import CallbackHelper
 
 logger = get_logger(__name__)
@@ -48,7 +49,12 @@ def register_graph_callbacks(app, client_getter):
                            selected_indicator_rows,
                            selected_signal_rows):
         end_date = from_sdate(end_date) 
-        if end_date is None or end_date < dt.datetime.now().date():
+        now = dt.datetime.now()
+        # We still want to update on interval if we just crossed a day
+        if end_date is None or\
+          now - dt.datetime.combine(end_date, dt.time()) > dt.timedelta(days=1,
+                                                                        minutes=1,
+                                                                        seconds=get_settings().update_interval):
             return dash.no_update
         
         logger.info("Interval callback triggered: updating engine")

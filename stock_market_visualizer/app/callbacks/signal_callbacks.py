@@ -101,7 +101,8 @@ def register_signal_callbacks(app, client_getter):
         Input(f'collapse-signal-table', 'is_open'),
         State('signal-edit-legend', 'children'))
     def hide_edit_fieldset(is_open, name):
-        return not is_open or name in [h.name() for h in trivial_handlers]
+        print(name, flush=True)
+        return not is_open or name in [h.name() for h in trivial_handlers] or len(name) == 0
 
     @app.callback(
         Output('signal-table', 'data'),
