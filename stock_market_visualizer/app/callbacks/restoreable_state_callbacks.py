@@ -15,7 +15,7 @@ def register_restoreable_state_callbacks(app, redis_getter):
       url_splitted = url.split(FIXED_PATH, 1)
       state_id = url_splitted[1]
       if len(state_id) == 0:
-        return dash.no_update, dash.no_update
+        return dash.no_update
       return state_id
 
     @app.callback(
@@ -43,7 +43,7 @@ def register_restoreable_state_callbacks(app, redis_getter):
               'show-ticker-table',
               'show-indicator-table',
               'show-signal-table']    
-      return tuple([state.get(key) if state.get(key) is not None else dash.no_update for key in keys])
+      return [state.get(key) if state.get(key) is not None else dash.no_update for key in keys]
 
     @app.callback(
       Output('url-copy', 'content'),

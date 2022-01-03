@@ -17,10 +17,13 @@ def get_layout(client):
         [
         dcc.Location(id='url', refresh=False),
         dcc.Store(id='restoreable-state'),
-        html.H1(children=['Stock Market Engine',
-                          dcc.Clipboard(id="url-copy",
+        html.Div(children=[html.H1(contentEditable=True,
+                                   className="d-inline",
+                                   children='Stock Market Engine'),
+                           dcc.Clipboard(id="url-copy",
                                         title='copy url',
                                         n_clicks=0,
+                                        className="d-inline",
                                         style={"margin-left" : 5, "fontSize": 30, "display": "inline-block"})]),
         dbc.Container(
             [
