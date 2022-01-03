@@ -1,4 +1,5 @@
 from .date_callbacks import register_date_callbacks
+from .header_callbacks import register_header_callbacks
 from .indicator_callbacks import register_indicator_callbacks
 from .graph_callbacks import register_graph_callbacks
 from .restoreable_state_callbacks import register_restoreable_state_callbacks
@@ -12,3 +13,4 @@ def register_callbacks(app, client_getter, redis_getter):
     register_graph_callbacks(app, client_getter)
     register_signal_callbacks(app, client_getter)
     register_restoreable_state_callbacks(app, redis_getter)
+    register_header_callbacks(app)

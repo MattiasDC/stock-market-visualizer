@@ -19,7 +19,7 @@ def register_restoreable_state_callbacks(app, redis_getter):
       return state_id
 
     @app.callback(
-      Output('header-title', 'children'),
+      Output('header-title', 'value'),
       Output('engine-id', 'data'),
       Output('date-picker-start', 'date'),
       Output('date-picker-end', 'date'),
@@ -51,7 +51,7 @@ def register_restoreable_state_callbacks(app, redis_getter):
       Output('url-copy', 'content'),
       Input('url-copy', 'n_clicks'),
       State('url', 'href'),
-      State('header-title', 'children'),
+      State('header-title', 'value'),
       State('engine-id', 'data'),
       State('date-picker-start', 'date'),
       State('date-picker-end','date'),
