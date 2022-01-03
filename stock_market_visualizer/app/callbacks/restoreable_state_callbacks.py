@@ -19,6 +19,7 @@ def register_restoreable_state_callbacks(app, redis_getter):
       return state_id
 
     @app.callback(
+      Output('header-title', 'children'),
       Output('engine-id', 'data'),
       Output('date-picker-start', 'date'),
       Output('date-picker-end', 'date'),
@@ -33,7 +34,8 @@ def register_restoreable_state_callbacks(app, redis_getter):
     def update_from_state(state_id):
       redis = redis_getter()
       state = json.loads(redis.get(state_id))
-      keys = ['engine-id',
+      keys = ['header-title',
+              'engine-id',
               'start-date',
               'end-date',
               'selected-tickers',
@@ -49,6 +51,7 @@ def register_restoreable_state_callbacks(app, redis_getter):
       Output('url-copy', 'content'),
       Input('url-copy', 'n_clicks'),
       State('url', 'href'),
+      State('header-title', 'children'),
       State('engine-id', 'data'),
       State('date-picker-start', 'date'),
       State('date-picker-end','date'),
@@ -61,6 +64,7 @@ def register_restoreable_state_callbacks(app, redis_getter):
       State('show-signal-table', 'value'))
     def create_url(n_clicks,
                    url,
+                   header_title,
                    engine_id,
                    start_date,
                    end_date,
@@ -75,6 +79,7 @@ def register_restoreable_state_callbacks(app, redis_getter):
         return dash.no_update
       url = url.split(FIXED_PATH, 1)[0]
       state = {}
+      state['header-title'] = header_title
       state['engine-id'] =  engine_id
       state['start-date'] = start_date
       state['end-date'] = end_date

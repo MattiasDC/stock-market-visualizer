@@ -4,6 +4,7 @@ import dash_bootstrap_components as dbc
 import datetime as dt
 
 from .date_layout import get_start_date_layout, get_end_date_layout
+from .header_layout import get_header_layout
 from .indicator_layout import get_create_indicator_modals_layout, get_indicator_table_layout
 from .interval_layout import get_interval_layout
 from .ticker_layout import get_ticker_table_layout
@@ -17,14 +18,7 @@ def get_layout(client):
         [
         dcc.Location(id='url', refresh=False),
         dcc.Store(id='restoreable-state'),
-        html.Div(children=[html.H1(contentEditable=True,
-                                   className="d-inline",
-                                   children='Stock Market Engine'),
-                           dcc.Clipboard(id="url-copy",
-                                        title='copy url',
-                                        n_clicks=0,
-                                        className="d-inline",
-                                        style={"margin-left" : 5, "fontSize": 30, "display": "inline-block"})]),
+        get_header_layout(),
         dbc.Container(
             [
              dbc.Row(
