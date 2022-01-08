@@ -4,9 +4,9 @@ from dash import dcc
 from dash import html
 
 from stock_market_visualizer.app.indicators import get_indicators
-from .checkable_table_dropdown_layout import get_checkable_table_dropdown_layout
+import stock_market_visualizer.app.layouts.checkable_table_dropdown_layout as checkable_table_dropdown_layout
 
-def get_create_indicator_modals_layout():
+def get_create_indicator_modals_layout(name):
     indicators = get_indicators()
     return [
            dbc.Modal(
@@ -18,7 +18,7 @@ def get_create_indicator_modals_layout():
                         [
                         html.P(f"{argument}:"),
                         html.Div(
-                            dbc.Input(id=f'{indicator.__name__}-{argument}-input',
+                            dbc.Input(id=f'{name}-{indicator.__name__}-{argument}-input',
                                       style={'margin-left': 5},
                                       type="number"),
                             className="input-group-append")
@@ -26,16 +26,16 @@ def get_create_indicator_modals_layout():
                         className="input-group")
                    for argument in indicators[indicator]])),
                dbc.ModalFooter(dbc.Button("Add",
-                                          id=f"add-{indicator.__name__}",
+                                          id=f"add-{name}-{indicator.__name__}",
                                           className="ms-auto",
                                           n_clicks=0))
                ],
-               id=f"modal-{indicator.__name__}",
+               id=f"modal-{name}-{indicator.__name__}",
                is_open=False)
            for indicator in indicators]
 
 def get_indicator_table_layout():
-  return get_checkable_table_dropdown_layout("indicator",
+  return [checkable_table_dropdown_layout.get_layout("indicator",
       [ i.__name__ for i in get_indicators()],
       [{'name': 'Ticker', 'id': 'ticker-col'}],
-      True)
+      True)] + get_create_indicator_modals_layout("indicator")

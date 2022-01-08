@@ -40,19 +40,20 @@ def register_indicator_callbacks(app, client_getter):
         return [ ir for ir in indicator_rows if {'ticker-col' : ir['ticker-col']} in ticker_rows ]
 
     def add_create_indicator_callbacks(indicator, arguments):
-        @app.callback(Input(f'dropdown-{indicator.__name__}', 'n_clicks'),
-                      State('indicator-table', 'data'),
-                      Output(f'modal-{indicator.__name__}', 'is_open'))
-        def create_indicator_form(n_clicks, rows):
+        @app.callback(Input(f'dropdown-indicator-{indicator.__name__}', 'n_clicks'),
+                      Output(f'modal-indicator-{indicator.__name__}', 'is_open'))
+        def create_indicator_form(n_clicks):
+            if n_clicks == 0 or None:
+                return False
             return True
 
-        @app.callback(Input(f'add-{indicator.__name__}', 'n_clicks'),
+        @app.callback(Input(f'add-indicator-{indicator.__name__}', 'n_clicks'),
                       State('indicator-table', 'data'),
                       State('ticker-table', 'active_cell'),
                       State('ticker-table', 'derived_virtual_data'),
                       State('indicator-table', 'selected_rows'),
-                      [State(f'{indicator.__name__}-{argument}-input', 'value') for argument in arguments],
-                      Output(f'modal-{indicator.__name__}', 'is_open'),
+                      [State(f'indicator-{indicator.__name__}-{argument}-input', 'value') for argument in arguments],
+                      Output(f'modal-indicator-{indicator.__name__}', 'is_open'),
                       Output('indicator-table', 'data'),
                       Output('indicator-table', 'selected_rows'))
         def create_indicator(n_clicks, indicator_rows, ticker_cell, ticker_rows, selected_indicators, arguments):

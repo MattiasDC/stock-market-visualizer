@@ -6,11 +6,14 @@ import json
 from random import randrange
 
 from utils.logging import get_logger
+from stock_market.ext.indicator import Identity
+from stock_market.ext.signal import CrossoverSignalDetector
 
 import stock_market_visualizer.app.callbacks.checkable_table_dropdown_callbacks as checkable_table
 from stock_market_visualizer.app.callbacks.callback_helper import CallbackHelper
 from stock_market_visualizer.app.config import get_settings
 import stock_market_visualizer.app.sme_api_helper as api
+from stock_market_visualizer.app.indicators import get_indicators_with_identity
 from stock_market_visualizer.app.signals import get_signal_detectors,\
                                                 get_supported_trivial_config_signal_detectors,\
                                                 get_supported_ticker_based_signal_detectors
@@ -24,6 +27,9 @@ class EmptyDetectorHandler:
 
     def name(self):
         return self.__detector_name
+
+    def id(self):
+        return self.name().replace(" ", "")
 
     def activate(self, engine_id):
         if engine_id is None:
@@ -43,13 +49,12 @@ class TickerBasedDetectorHandler:
         self.__app = app
         self.__client = client
         self.__detector_cls = detector_cls
-        self.__active_ticker = None
 
         @self.__app.callback(
-            Output(f'config-dropdown-ticker-{self.name()}', 'options'),
-            Output(f'config-dropdown-ticker-{self.name()}', 'value'),
+            Output(f'config-dropdown-ticker-{self.id()}', 'options'),
+            Output(f'config-dropdown-ticker-{self.id()}', 'value'),
             Input('engine-id', 'data'),
-            State(f'config-dropdown-ticker-{self.name()}', 'value'))
+            State(f'config-dropdown-ticker-{self.id()}', 'value'))
         def update_dropdown_list(engine_id, value):
             options = self.__get_options(engine_id)
             if len(options) == 1:
@@ -57,30 +62,135 @@ class TickerBasedDetectorHandler:
             return options, value
 
         @self.__app.callback(
-            Input(f'config-dropdown-ticker-{self.name()}', 'value'),
+            Input(f'config-dropdown-ticker-{self.id()}', 'value'),
+            State('signal-data-placeholder', 'data'),
             Output('signal-data-placeholder', 'data'))
-        def update_active_ticker(ticker_value):
-            return ticker_value
+        def update_active_ticker(ticker_value, data):
+            data['ticker'] = ticker_value
+            return data
 
     def name(self):
         return self.__detector_cls.NAME()
+
+    def id(self):
+        return self.name().replace(" ", "")
+
+    def app(self):
+        return self.__app
+
+    def client(self):
+        return self.__client
 
     def __get_options(self, engine_id):
         tickers = api.get_tickers(engine_id, self.__client)
         return [{'label': t, 'value': t} for t in tickers]
 
     def activate(self, engine_id):
-        if engine_id is None:
-            return None
         return engine_id
 
     def create(self, engine_id, data):
         new_engine_id = api.add_signal_detector(engine_id,
-                                            {"static_name" : self.name(),
-                                             "config" : json.dumps({"id" : randrange(get_settings().max_id_generator),
-                                                                    "ticker" : json.dumps(data)})},
-                                            self.__client)
+                                                {"static_name" : self.name(),
+                                                 "config" : json.dumps({"id" : randrange(get_settings().max_id_generator),
+                                                                        "ticker" : json.dumps(data['ticker'])})},
+                                                self.__client)
         api.update_engine(new_engine_id, api.get_date(new_engine_id, self.__client), self.__client)
+        return new_engine_id
+
+    def get_id(self, config):
+        return json.loads(config)['id']
+
+class CrossoverDetectorHandler(TickerBasedDetectorHandler):
+    def __init__(self, app, client):
+        super().__init__(app, client, CrossoverSignalDetector)
+
+        indicators = get_indicators_with_identity()
+        for indicator in api.get_supported_indicators(client):
+            if indicator['indicator_name'] not in [i.__name__ for i in indicators.keys()]:
+                logger.warning(f"{indicator} is not implemented in the stock market visualizer")
+
+        for indicator in indicators.keys():
+            if indicator.__name__ not in [i['indicator_name'] for i in api.get_supported_indicators(client)]:
+                logger.warning(f"{indicator} is implemented in the stock market visualizer, but not supported by the engine")
+
+        for indicator in indicators:
+            self.add_create_indicator_callbacks("Responsive", indicator, indicators[indicator])
+            if indicator != Identity:
+                self.add_create_indicator_callbacks("Unresponsive", indicator, indicators[indicator])
+
+        @app.callback(Input(f'{self.name()}-custom-name', 'value'),
+                      State('signal-data-placeholder', 'data'),
+                      Output('signal-data-placeholder', 'data'))
+        def update_custom_name(custom_name, data):
+            data['name'] = custom_name
+            return data
+
+        @app.callback(Input(f'{self.name()}-sentiment', 'value'),
+                      State('signal-data-placeholder', 'data'),
+                      Output('signal-data-placeholder', 'data'))
+        def update_custom_name(sentiment, data):
+            data['sentiment'] = sentiment
+            return data        
+
+    def add_create_indicator_callbacks(self, name, indicator, arguments):
+        if indicator != Identity:
+            @self.app().callback(Input(f'dropdown-{name}-{indicator.__name__}', 'n_clicks'),
+                                 Output(f'modal-{name}-{indicator.__name__}', 'is_open'))
+            def create_indicator_form(n_clicks):
+                if n_clicks == 0 or None:
+                    return False
+                return True
+    
+            @self.app().callback(Input(f'add-{name}-{indicator.__name__}', 'n_clicks'),
+                                 State('signal-data-placeholder', 'data'),
+                                 [State(f'{name}-{indicator.__name__}-{argument}-input', 'value') for argument in arguments],
+                                 Output(f'modal-{name}-{indicator.__name__}', 'is_open'),
+                                 Output('signal-data-placeholder', 'data'),
+                                 Output(f'{name}-info', 'children'))
+            def create_indicator(n_clicks, data, arguments):
+                if n_clicks == 0 or None:
+                    return dash.no_update, dash.no_update, dash.no_update
+                if not isinstance(arguments, list):
+                    arguments = [arguments]
+    
+                created_indicator = indicator(*arguments)
+                data[name] = { 'name' : indicator.__name__,
+                               'config' : created_indicator.to_json()}
+                return False, data, str(created_indicator)
+        else:
+            @self.app().callback(Input(f'dropdown-{name}-{indicator.__name__}', 'n_clicks'),
+                                 State('signal-data-placeholder', 'data'),
+                                 Output('signal-data-placeholder', 'data'),
+                                 Output(f'{name}-info', 'children'))
+            def create_indicator(n_clicks, data):
+                if n_clicks == 0 or None:
+                    return dash.no_update, dash.no_update
+                created_indicator = indicator()
+                data[name] = { 'name' : indicator.__name__,
+                               'config' : created_indicator.to_json()}
+                return data, str(created_indicator)
+
+    def create(self, engine_id, data):
+        if 'name' not in data:
+            return engine_id
+        if 'Responsive' not in data:
+            return engine_id
+        if 'Unresponsive' not in data:
+            return engine_id
+        if 'ticker' not in data or len(data['ticker']) == 0:
+            return engine_id
+        if 'sentiment' not in data:
+            return engine_id
+        new_engine_id = api.add_signal_detector(engine_id,
+            {'static_name' : self.name(),
+             'config' : json.dumps({'id' : randrange(get_settings().max_id_generator),
+                                    'name' : data['name'],
+                                    'ticker' : json.dumps(data['ticker']),
+                                    'responsive_indicator_getter' : data['Responsive'],
+                                    'unresponsive_indicator_getter' : data['Unresponsive'],
+                                    'sentiment' : json.dumps(data['sentiment'])})},
+            self.client())
+        api.update_engine(new_engine_id, api.get_date(new_engine_id, self.client()), self.client())
         return new_engine_id
 
     def get_id(self, config):
@@ -95,6 +205,9 @@ def register_signal_callbacks(app, client_getter):
     trivial_handlers = [EmptyDetectorHandler(client, sd.NAME()) for sd in get_supported_trivial_config_signal_detectors()]
     ticker_based_sds = [TickerBasedDetectorHandler(app, client, sd) for sd in get_supported_ticker_based_signal_detectors()]
     detector_handlers = {l.name() : l for l in trivial_handlers + ticker_based_sds}
+    
+    crossover_handler = CrossoverDetectorHandler(app, client)
+    detector_handlers[crossover_handler.name()] = crossover_handler
 
     @app.callback(
         Output('signal-edit-placeholder', 'hidden'),
@@ -143,7 +256,7 @@ def register_signal_callbacks(app, client_getter):
             Output('signal-edit-fieldset', 'children'),
             Output('signal-edit-placeholder', 'hidden'),
             Output('signal-table', 'selected_rows'),
-            Input(f'dropdown-{handler.name()}', 'n_clicks'),
+            Input(f'dropdown-signal-{handler.id()}', 'n_clicks'),
             State('signal-edit-fieldset', 'children'),
             State('engine-id', 'data'),
             State('signal-table', 'selected_rows'))
@@ -157,12 +270,14 @@ def register_signal_callbacks(app, client_getter):
             hide_fieldset = False
             for child in fieldset_children:
                 child_props = child['props']
+                if 'id' not in child_props:
+                    continue
                 name = child_props['id']
                 if 'signal-edit-legend' == name:
                     child_props['children'] = handler.name()
                 if 'config-' in name:
                     child_props['hidden'] = True
-                if handler.name() in name.replace('config-', ''):
+                if handler.id() in name.replace('config-', ''):
                     if len(child_props['children']) != 0:
                         child_props['hidden'] = False
                     else:
@@ -200,6 +315,10 @@ def register_signal_callbacks(app, client_getter):
     for sd in get_signal_detectors(client):
         if sd not in detector_handlers.keys():
             logger.warning(f"{sd} signal detector is not implemented in the stock market visualizer")
+
+    for sd in detector_handlers.keys():
+        if sd not in get_signal_detectors(client):
+            logger.warning(f"{sd} signal detector is implemented in the stock market visualizer, but not supported by the engine")            
 
     for _, l in detector_handlers.items():
         register_dropdown_callback(l)

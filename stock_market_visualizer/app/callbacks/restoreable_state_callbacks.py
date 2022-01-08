@@ -33,7 +33,11 @@ def register_restoreable_state_callbacks(app, redis_getter):
       Input('restoreable-state', 'data'))
     def update_from_state(state_id):
       redis = redis_getter()
-      state = json.loads(redis.get(state_id))
+      state_json = redis.get(state_id)
+      if state_json is None:
+        state = {}
+      else:
+        state = json.loads(state_json)
       keys = ['header-title',
               'engine-id',
               'start-date',

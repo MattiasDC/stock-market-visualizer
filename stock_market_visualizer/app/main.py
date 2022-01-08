@@ -32,11 +32,12 @@ def get_redis():
 async def startup_event():
     server.state.client_generator = ClientSessionGenerator()
     server.state.redis = init_redis_pool()
-    app.layout = layout.get_layout(server.state.client_generator.get())
+    app.layout = layout.get_layout()
     register_callbacks(app, get_client_generator, get_redis)
 
 if __name__ == '__main__':
     settings = get_settings()
+    app.enable_dev_tools(debug=True, dev_tools_hot_reload=True)
     uvicorn.run("main:server",
                 host=settings.host_url,
                 port=settings.port,

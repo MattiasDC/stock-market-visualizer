@@ -62,6 +62,10 @@ def get_signals_url(engine_id):
     settings = get_settings()
     return concat_port(settings.api_url, port=settings.api_port) + f"/signals/{engine_id}"
 
+def get_supported_indicators_url():
+    settings = get_settings()
+    return concat_port(settings.api_url, port=settings.api_port) + f"/getsupportedindicators"
+
 def get_create_engine_json(start_date, tickers, signal_detectors):
     return json.dumps({
         "stock_market": {
@@ -175,3 +179,10 @@ def get_signals(engine_id, client):
     if engine_id is None:
         return SignalSequence()
     return SignalSequence.from_json(client.get(url=get_signals_url(engine_id)).json())
+
+@lru_cache(maxsize=MAX_CACHE_SIZE)
+def get_supported_indicators(client):
+    response = client.get(url=get_supported_indicators_url())
+    if response.status_code != HTTPStatus.OK:
+        return None
+    return response.json()

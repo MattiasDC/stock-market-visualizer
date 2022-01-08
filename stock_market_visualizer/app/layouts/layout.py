@@ -5,7 +5,7 @@ import datetime as dt
 
 from .date_layout import get_start_date_layout, get_end_date_layout
 from .header_layout import get_header_layout
-from .indicator_layout import get_create_indicator_modals_layout, get_indicator_table_layout
+from .indicator_layout import get_indicator_table_layout
 from .interval_layout import get_interval_layout
 from .ticker_layout import get_ticker_table_layout
 from .signal_layout import get_signal_layout
@@ -13,7 +13,7 @@ from .signal_layout import get_signal_layout
 def get_themes():
     return [dbc.themes.BOOTSTRAP]
 
-def get_layout(client):
+def get_layout():
     return dbc.Container(children=
         [
         dcc.Location(id='url', refresh=False),
@@ -32,9 +32,9 @@ def get_layout(client):
                 dbc.Col(dcc.Graph(id='stock-market-graph')),
                 ),
              dbc.Row(
-                children=get_signal_layout(client)
+                children=get_signal_layout()
                 )
         ]),
         dcc.Store(id='engine-id'),
         get_interval_layout()
-        ] + get_create_indicator_modals_layout())
+        ])

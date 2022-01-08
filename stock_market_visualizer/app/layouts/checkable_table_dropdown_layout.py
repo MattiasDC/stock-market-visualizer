@@ -3,16 +3,12 @@ from dash import dash_table
 from dash import dcc
 from dash import html
 
-def get_checkable_table_dropdown_layout(name, items, extra_columns, disabled):
+import stock_market_visualizer.app.layouts.dropdown_button_layout as dropdown_button_layout
+
+def get_layout(name, items, extra_columns, disabled):
 	return dbc.Container(children=
         [
-        dbc.DropdownMenu(
-            id=f'{name}-dropdown',
-            label=f"Add {name.capitalize()}",
-            children=[dbc.DropdownMenuItem(item,
-                                           id=f"dropdown-{item}",
-                                           n_clicks=0) for item in sorted(items)],
-            disabled=disabled),
+        dropdown_button_layout.get_layout(name, name, items, disabled),
         dcc.Checklist(
             id=f'show-{name}-table',
             options=[{'label': f'Show {name.capitalize()}s', 'value': 'S'}],

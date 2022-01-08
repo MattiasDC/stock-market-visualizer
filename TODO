@@ -1,4 +1,9 @@
-Create restoreable state from url
+Improve speed of signal drawing
 cache queries from engine (when engine changes on update)
-Implement Crossover signal configuration
-Make title editable (Is Puru Hedged?)
+Add disclaimer
+add adsense configuration
+
+formatting:
+black
+flake8
+replace tabs by spaces
