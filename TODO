@@ -1,9 +1,10 @@
-Improve speed of signal drawing
-cache queries from engine (when engine changes on update)
-Add disclaimer
-add adsense configuration
-
 formatting:
 black
 flake8
 replace tabs by spaces
+
+Improve speed of signal drawing
+cache queries from engine (when engine changes on update)
+Graph signals
+Add disclaimer
+add adsense configuration

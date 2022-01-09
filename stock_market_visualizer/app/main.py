@@ -4,11 +4,12 @@ import uvicorn as uvicorn
 from dash_extensions.enrich import DashProxy, MultiplexerTransform
 
 from stock_market_visualizer.app.config import get_settings
-import stock_market_visualizer.app.layouts as layout
+from stock_market_visualizer.app.layout import Layout
 from stock_market_visualizer.app.callbacks import register_callbacks
 from stock_market_visualizer.app.redis_helper import init_redis_pool
 from stock_market_visualizer.common.requests import ClientSessionGenerator
 
+layout = Layout()
 
 app = DashProxy(__name__,
                 requests_pathname_prefix="/sme/",
@@ -33,7 +34,7 @@ async def startup_event():
     server.state.client_generator = ClientSessionGenerator()
     server.state.redis = init_redis_pool()
     app.layout = layout.get_layout()
-    register_callbacks(app, get_client_generator, get_redis)
+    layout.register_callbacks(app, get_client_generator, get_redis)
 
 if __name__ == '__main__':
     settings = get_settings()
