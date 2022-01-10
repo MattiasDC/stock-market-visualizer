@@ -3,12 +3,12 @@ from dash import html
 import dash_bootstrap_components as dbc
 import datetime as dt
 
-from stock_market_visualizer.app.layouts.indicator_layout import get_indicator_table_layout
-from stock_market_visualizer.app.layouts.signal_layout import get_signal_layout
 from stock_market_visualizer.app.date import DateLayout
 from stock_market_visualizer.app.engine import EngineLayout
 from stock_market_visualizer.app.graph import GraphLayout
 from stock_market_visualizer.app.header import HeaderLayout
+from stock_market_visualizer.app.indicator import IndicatorLayout
+from stock_market_visualizer.app.signals import SignalDetectorLayout
 from stock_market_visualizer.app.ticker import TickerLayout
 from stock_market_visualizer.app.callbacks import register_callbacks as rc
 
@@ -17,6 +17,8 @@ class Layout:
         self.engine_layout = EngineLayout()
         self.header_layout = HeaderLayout()
         self.ticker_layout = TickerLayout(self.engine_layout)
+        self.indicator_layout = IndicatorLayout(self.engine_layout, self.ticker_layout)
+        self.signal_detector_layout = SignalDetectorLayout()
         self.date_layout = DateLayout(self.engine_layout, self.ticker_layout)
         self.graph_layout = GraphLayout(self.engine_layout, self.date_layout)
 
@@ -35,10 +37,10 @@ class Layout:
                     self.date_layout.get_layout() +
                     [
                     dbc.Col(self.ticker_layout.get_layout()),
-                    dbc.Col(get_indicator_table_layout())
+                    dbc.Col(self.indicator_layout.get_layout())
                     ]),
                  dbc.Row(self.graph_layout.get_layout()),
-                 dbc.Row(children=get_signal_layout())
+                 dbc.Row(children=self.signal_detector_layout.get_layout())
             ]),
             self.engine_layout.get_layout()
             ])
@@ -49,3 +51,5 @@ class Layout:
         self.date_layout.register_callbacks(app, client_getter)
         self.graph_layout.register_callbacks(app, client_getter)
         self.ticker_layout.register_callbacks(app, client_getter)
+        self.indicator_layout.register_callbacks(app, client_getter)
+        self.signal_detector_layout.register_callbacks(app, client_getter)

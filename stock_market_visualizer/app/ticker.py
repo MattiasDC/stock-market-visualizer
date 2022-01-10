@@ -5,7 +5,6 @@ import dash
 import dash_bootstrap_components as dbc
 from dash_extensions.enrich import Output, Input, State
 
-import stock_market_visualizer.app.callbacks.checkable_table_dropdown_callbacks as checkable_table
 import stock_market_visualizer.app.sme_api_helper as api
 from stock_market_visualizer.app.callbacks.callback_helper import CallbackHelper
 
@@ -15,7 +14,7 @@ class TickerLayout:
         self.add_ticker_input = 'add-ticker-input'
         self.add_ticker_button = 'add-ticker-button'
         self.show_ticker_table = 'show-ticker-table'
-        self.ticker_table = 'ticker-table'
+        self.ticker_table_id = 'ticker-table'
         self.collapse_ticker_table = 'collapse-ticker-table'
 
     def get_add_ticker_input_n_submit(self):
@@ -28,10 +27,19 @@ class TickerLayout:
         return self.add_ticker_button, 'n_clicks'
 
     def get_ticker_table(self):
-        return self.ticker_table, 'data'
+        return self.ticker_table_id, 'data'
 
     def get_ticker_table_selected(self):
-        return self.ticker_table, 'selected_rows'
+        return self.ticker_table_id, 'selected_rows'
+
+    def get_active_ticker(self):
+        return self.ticker_table_id, 'active_cell'
+
+    def get_ticker_table_virtual(self):
+        return self.ticker_table_id, 'derived_virtual_data'
+
+    def get_show_ticker_table(self):
+        return self.show_ticker_table, 'value'
 
     def get_layout(self):
         return dbc.Container(children=
@@ -56,7 +64,7 @@ class TickerLayout:
                 style={'margin-top': 5}),
             dbc.Collapse(
                 dash_table.DataTable(
-                    id=self.ticker_table,
+                    id=self.ticker_table_id,
                     columns=[{'name': 'Ticker', 'id': 'ticker-col'}],
                     data=[],
                     sort_action='native',
@@ -71,7 +79,12 @@ class TickerLayout:
 
     def register_callbacks(self, app, client_getter):
         helper = CallbackHelper(client_getter)
-        checkable_table.register_callbacks(app, 'ticker')
+
+        @app.callback(
+            Input(*self.get_show_ticker_table()),
+            Output(self.collapse_ticker_table, 'is_open'))
+        def toggle_collapse_table(show_table):
+            return 'S' in show_table
 
         @app.callback(
             Output(*self.get_ticker_table()),
@@ -114,8 +127,8 @@ class TickerLayout:
         @app.callback(
             Output(*self.engine_layout.get_id()),
             Output(*self.get_ticker_table_selected()),
-            Input(self.ticker_table, 'data_timestamp'),
-            State(self.ticker_table, 'data_previous'),
+            Input(self.ticker_table_id, 'data_timestamp'),
+            State(self.ticker_table_id, 'data_previous'),
             State(*self.get_ticker_table()),
             State(*self.engine_layout.get_id()),
             State(*self.get_ticker_table_selected()))

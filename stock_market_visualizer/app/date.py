@@ -68,8 +68,8 @@ class DateLayout:
             Output(*self.get_end_date()),
             Input(*self.get_start_date()),
             Input(*self.get_end_date()),
-            Input(*self.ticker_layout.get_ticker_table()),
-            Input('signal-table', 'data'),
+            State(*self.ticker_layout.get_ticker_table()),
+            State('signal-table', 'data'),
             State(self.end_date_picker, 'min_date_allowed'),
             State(*self.engine_layout.get_id()))
         def update_engine(start_date, end_date, ticker_rows, signal_detector_rows, min_end_date, engine_id):

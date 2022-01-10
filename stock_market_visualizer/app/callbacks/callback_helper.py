@@ -4,14 +4,14 @@ import json
 import pandas as pd
 import plotly.graph_objects as go
 
+from stock_market.common.factory import Factory
 from stock_market.core import OHLC, Signal, Sentiment
 from stock_market.core.time_series import make_relative, TimeSeries
+from stock_market.ext.indicator import register_indicator_factories
 from stock_market.ext.signal import register_signal_detector_factories
-from stock_market.common.factory import Factory
+from utils.logging import get_logger
 
 import stock_market_visualizer.app.sme_api_helper as api
-from stock_market_visualizer.app.indicators import get_indicator_factory
-from utils.logging import get_logger
 
 logger = get_logger(__name__)
 
@@ -35,7 +35,7 @@ class CallbackHelper:
         return signal_detectors
 
     def get_configured_indicators(self, rows, selected_rows):
-        factory = get_indicator_factory()
+        factory = register_indicator_factories(Factory())
         indicators_per_ticker = defaultdict(list)
         for i, row in enumerate(rows):
             if i in selected_rows:
