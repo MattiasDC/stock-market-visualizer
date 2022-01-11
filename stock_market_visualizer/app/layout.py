@@ -8,9 +8,9 @@ from stock_market_visualizer.app.engine import EngineLayout
 from stock_market_visualizer.app.graph import GraphLayout
 from stock_market_visualizer.app.header import HeaderLayout
 from stock_market_visualizer.app.indicator import IndicatorLayout
+from stock_market_visualizer.app.restoreable_state import RestoreableStateLayout
 from stock_market_visualizer.app.signals import SignalDetectorLayout
 from stock_market_visualizer.app.ticker import TickerLayout
-from stock_market_visualizer.app.callbacks import register_callbacks as rc
 
 class Layout:
     def __init__(self):
@@ -21,10 +21,10 @@ class Layout:
         self.signal_detector_layout = SignalDetectorLayout(self.engine_layout)
         self.date_layout = DateLayout(self.engine_layout, self.ticker_layout)
         self.graph_layout = GraphLayout(self.engine_layout, self.date_layout)
+        self.restoreable_state_layout = RestoreableStateLayout()
         self.layout = dbc.Container(children=
             [
-            dcc.Location(id='url', refresh=False),
-            dcc.Store(id='restoreable-state'),
+            self.restoreable_state_layout.get_layout(),
             self.header_layout.get_layout(),
             dbc.Container(
                 [
@@ -47,10 +47,10 @@ class Layout:
         return self.layout
 
     def register_callbacks(self, app, client_getter, redis_getter):
-        rc(app, client_getter, redis_getter)
         self.header_layout.register_callbacks(app)
         self.date_layout.register_callbacks(app, client_getter)
         self.graph_layout.register_callbacks(app, client_getter)
         self.ticker_layout.register_callbacks(app, client_getter)
         self.indicator_layout.register_callbacks(app, client_getter)
         self.signal_detector_layout.register_callbacks(app, client_getter)
+        self.restoreable_state_layout.register_callbacks(app, redis_getter)

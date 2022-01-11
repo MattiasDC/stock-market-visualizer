@@ -5,7 +5,6 @@ from dash_extensions.enrich import DashProxy, MultiplexerTransform
 
 from stock_market_visualizer.app.config import get_settings
 from stock_market_visualizer.app.layout import Layout
-from stock_market_visualizer.app.callbacks import register_callbacks
 from stock_market_visualizer.app.redis_helper import init_redis_pool
 from stock_market_visualizer.common.requests import ClientSessionGenerator
 
