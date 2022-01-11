@@ -22,9 +22,9 @@ class Layout:
         self.date_layout = DateLayout(self.engine_layout, self.ticker_layout)
         self.graph_layout = GraphLayout(self.engine_layout, self.date_layout)
         self.restoreable_state_layout = RestoreableStateLayout()
+
         self.layout = dbc.Container(children=
-            [
-            self.restoreable_state_layout.get_layout(),
+            self.restoreable_state_layout.get_layout() + [
             self.header_layout.get_layout(),
             dbc.Container(
                 [

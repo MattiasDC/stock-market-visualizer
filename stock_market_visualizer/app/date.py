@@ -8,7 +8,6 @@ import datetime as dt
 from utils.dateutils import from_sdate
 
 import stock_market_visualizer.app.sme_api_helper as api
-from stock_market_visualizer.app.callbacks.callback_helper import CallbackHelper
 
 class DateLayout:
     def __init__(self, engine_layout, ticker_layout):
@@ -51,9 +50,17 @@ class DateLayout:
                 display_format=self.date_format)
             ]))
 
+    def __get_signal_detectors(self, rows):
+        signal_detectors = []
+        for row in rows:
+            sd = dict(row)
+            sd.pop('signal-col')
+            sd['static_name'] = sd.pop('name')
+            signal_detectors.append(sd)
+        return signal_detectors
+
     def register_callbacks(self, app, client_getter):
-        helper = CallbackHelper(client_getter)
-        client = helper.get_client()
+        client = client_getter()
 
         @app.callback(
             Output(self.end_date_picker, 'min_date_allowed'),
@@ -87,8 +94,8 @@ class DateLayout:
             if end_date < min_end_date:
                 return dash.no_update
         
-            tickers = helper.get_tickers(ticker_rows)
-            signal_detectors = helper.get_signal_detectors(signal_detector_rows)
+            tickers = self.ticker_layout.get_tickers(ticker_rows)
+            signal_detectors = self.__get_signal_detectors(signal_detector_rows)
             if engine_id is None:
                 engine_id = api.create_engine(start_date, tickers, signal_detectors, client)
             if engine_id is None:

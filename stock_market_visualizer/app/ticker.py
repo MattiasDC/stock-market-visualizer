@@ -6,7 +6,6 @@ import dash_bootstrap_components as dbc
 from dash_extensions.enrich import Output, Input, State
 
 import stock_market_visualizer.app.sme_api_helper as api
-from stock_market_visualizer.app.callbacks.callback_helper import CallbackHelper
 
 class TickerLayout:
     def __init__(self, engine_layout):
@@ -51,6 +50,9 @@ class TickerLayout:
                 is_open=True)
             ])
 
+    def get_tickers(self, rows):
+        return [row['ticker-col'] for row in rows]
+
     def get_add_ticker_input_n_submit(self):
         return self.add_ticker_input, 'n_submit'
 
@@ -79,7 +81,7 @@ class TickerLayout:
         return self.layout
 
     def register_callbacks(self, app, client_getter):
-        helper = CallbackHelper(client_getter)
+        client = client_getter()
 
         @app.callback(
             Input(*self.get_show_ticker_table()),
@@ -91,7 +93,6 @@ class TickerLayout:
             Output(*self.get_ticker_table()),
             Input(*self.engine_layout.get_id()))
         def update_ticker_table(engine_id):
-            client = helper.get_client()
             tickers = api.get_tickers(engine_id, client)
             return [{'ticker-col' : ticker} for ticker in tickers]
 
@@ -117,7 +118,6 @@ class TickerLayout:
             if engine_id is None:
                 return no_update
 
-            client = helper.get_client()
             engine_id = api.add_ticker(engine_id, ticker_symbol, client)
             if engine_id is None:
                 return no_update
@@ -147,7 +147,6 @@ class TickerLayout:
             assert len(removed_ticker_symbols) == 1
             ticker_symbol = next(iter(removed_ticker_symbols[0].values()))
             
-            client = helper.get_client()
             engine_id = api.remove_ticker(engine_id, ticker_symbol, client)
             if engine_id is None:
                 return dash.no_update, dash.no_update

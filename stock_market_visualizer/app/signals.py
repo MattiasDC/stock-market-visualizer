@@ -16,7 +16,6 @@ from stock_market.ext.signal import MonthlySignalDetector,\
 from utils.logging import get_logger
 
 import stock_market_visualizer.app.sme_api_helper as api
-from stock_market_visualizer.app.callbacks.callback_helper import CallbackHelper
 from stock_market_visualizer.app.config import get_settings
 from stock_market_visualizer.app.checkable_table import CheckableTableLayout
 from stock_market_visualizer.app.dropdown_button import DropdownButton
@@ -427,11 +426,9 @@ class SignalDetectorLayout:
 
 
     def register_callbacks(self, app, client_getter):
-        helper = CallbackHelper(client_getter)
-    
         self.signal_detector_table.register_callbacks(app)
     
-        client = helper.get_client()
+        client = client_getter()
         detector_handlers = {dh.name() : dh for dh in [cl.get_handler(app, client) for cl in self.get_config_layouts()]}
         
         @app.callback(
@@ -445,7 +442,6 @@ class SignalDetectorLayout:
             Output(*self.signal_detector_table.get_table()),
             Input(*self.engine_layout.get_id()))
         def update_signal_table(engine_id):
-            client = helper.get_client()
             return [{'signal-col' : signal_detector['name'],
                      'name' : signal_detector['static_name'],
                      'config' : json.dumps(signal_detector['config'])}
@@ -530,7 +526,6 @@ class SignalDetectorLayout:
             assert len(removed_signal_detectors) == 1
             removed_sd = removed_signal_detectors[0]
             signal_detector_id = detector_handlers[removed_sd['name']].get_id(removed_sd['config'])
-            client = helper.get_client()
             new_engine_id = api.remove_signal_detector(engine_id, signal_detector_id, client)
 
             if new_engine_id is None:
