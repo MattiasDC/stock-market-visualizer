@@ -10,9 +10,10 @@ from utils.dateutils import from_sdate
 import stock_market_visualizer.app.sme_api_helper as api
 
 class DateLayout:
-    def __init__(self, engine_layout, ticker_layout):
+    def __init__(self, engine_layout, ticker_layout, signal_layout):
         self.engine_layout = engine_layout
         self.ticker_layout = ticker_layout
+        self.signal_layout = signal_layout
         self.earliest_start = dt.date(1990, 1, 1)
         self.date_format = 'D-M-Y'
         self.start_date_picker = 'start-date-picker'
@@ -76,7 +77,7 @@ class DateLayout:
             Input(*self.get_start_date()),
             Input(*self.get_end_date()),
             State(*self.ticker_layout.get_ticker_table()),
-            State('signal-table', 'data'),
+            State(*self.signal_layout.signal_detector_table.get_table()),
             State(self.end_date_picker, 'min_date_allowed'),
             State(*self.engine_layout.get_id()))
         def update_engine(start_date, end_date, ticker_rows, signal_detector_rows, min_end_date, engine_id):

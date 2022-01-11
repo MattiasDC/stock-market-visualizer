@@ -19,7 +19,7 @@ class Layout:
         self.ticker_layout = TickerLayout(self.engine_layout)
         self.indicator_layout = IndicatorLayout(self.engine_layout, self.ticker_layout)
         self.signal_detector_layout = SignalDetectorLayout(self.engine_layout)
-        self.date_layout = DateLayout(self.engine_layout, self.ticker_layout)
+        self.date_layout = DateLayout(self.engine_layout, self.ticker_layout, self.signal_detector_layout)
         self.graph_layout = GraphLayout(self.engine_layout, self.date_layout)
         self.restoreable_state_layout = RestoreableStateLayout()
 
