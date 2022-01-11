@@ -7,6 +7,13 @@ class DropdownButton:
 		self.items = items
 		self.disabled = disabled
 		self.dropdown_id = f'{identifier}-dropdown'
+		self.layout = dbc.DropdownMenu(id=self.dropdown_id,
+            						   label=f"Add {self.name.capitalize()}",
+            						   class_name="d-inline",
+            						   children=[dbc.DropdownMenuItem(item,
+            						                                  id=self.get_item(item),
+            						                                  n_clicks=0) for item in sorted(self.items)],
+            						   disabled=self.disabled)
 
 	def get_label(self):
 		return self.dropdown_id, 'label'
@@ -21,11 +28,4 @@ class DropdownButton:
 		return self.get_item(item), 'n_clicks'
 
 	def get_layout(self):
-		return dbc.DropdownMenu(
-            id=self.dropdown_id,
-            label=f"Add {self.name.capitalize()}",
-            class_name="d-inline",
-            children=[dbc.DropdownMenuItem(item,
-                                           id=self.get_item(item),
-                                           n_clicks=0) for item in sorted(self.items)],
-            disabled=self.disabled)
+		return self.layout

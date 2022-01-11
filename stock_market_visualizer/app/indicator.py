@@ -22,6 +22,32 @@ class ModalIndicatorCreatorLayout:
     def __init__(self, name):
         self.name = name
         self.indicators = get_indicators()
+        self.layout = [
+                      dbc.Modal(
+                          [
+                          dbc.ModalHeader(dbc.ModalTitle(indicator.__name__)),
+                          dbc.ModalBody(dbc.InputGroup(children=
+                              [
+                              html.Div(
+                                   [
+                                   html.P(f"{argument}:"),
+                                   html.Div(
+                                       dbc.Input(id=self.get_argument(indicator, argument),
+                                                 style={'margin-left': 5},
+                                                 type="number"),
+                                       className="input-group-append")
+                                   ],
+                                   className="input-group")
+                              for argument in self.indicators[indicator]])),
+                          dbc.ModalFooter(dbc.Button("Add",
+                                                     id=self.get_add(indicator),
+                                                     className="ms-auto",
+                                                     n_clicks=0))
+                          ],
+                          id=self.get_modal(indicator),
+                          is_open=False)
+                      for indicator in self.indicators
+                      ]
 
     def get_argument(self, indicator, argument):
         return f'{self.name}-{indicator.__name__}-{argument}-input'
@@ -42,31 +68,7 @@ class ModalIndicatorCreatorLayout:
         return self.get_add(indicator), 'n_clicks'
 
     def get_layout(self):
-        return [
-               dbc.Modal(
-                   [
-                   dbc.ModalHeader(dbc.ModalTitle(indicator.__name__)),
-                   dbc.ModalBody(dbc.InputGroup(children=
-                       [
-                       html.Div(
-                            [
-                            html.P(f"{argument}:"),
-                            html.Div(
-                                dbc.Input(id=self.get_argument(indicator, argument),
-                                          style={'margin-left': 5},
-                                          type="number"),
-                                className="input-group-append")
-                            ],
-                            className="input-group")
-                       for argument in self.indicators[indicator]])),
-                   dbc.ModalFooter(dbc.Button("Add",
-                                              id=self.get_add(indicator),
-                                              className="ms-auto",
-                                              n_clicks=0))
-                   ],
-                   id=self.get_modal(indicator),
-                   is_open=False)
-               for indicator in self.indicators]
+        return self.layout
 
 class IndicatorLayout:
     def __init__(self, engine_layout, ticker_layout):

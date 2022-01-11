@@ -20,9 +20,10 @@ class GraphLayout:
         self.date_layout = date_layout
         self.interval_layout = IntervalLayout()
         self.stock_market_graph = 'stock-market-graph'
-
+        self.layout = dbc.Col(dbc.Container([dcc.Graph(id=self.stock_market_graph), self.interval_layout.get_layout()]))
+        
     def get_layout(self):
-        return dbc.Col(dbc.Container([dcc.Graph(id=self.stock_market_graph), self.interval_layout.get_layout()]))
+        return self.layout
 
     def get_graph(self):
         return self.stock_market_graph, 'figure'

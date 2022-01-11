@@ -21,12 +21,7 @@ class Layout:
         self.signal_detector_layout = SignalDetectorLayout()
         self.date_layout = DateLayout(self.engine_layout, self.ticker_layout)
         self.graph_layout = GraphLayout(self.engine_layout, self.date_layout)
-
-    def get_themes(self):
-        return [dbc.themes.BOOTSTRAP]
-
-    def get_layout(self):
-        return dbc.Container(children=
+        self.layout = dbc.Container(children=
             [
             dcc.Location(id='url', refresh=False),
             dcc.Store(id='restoreable-state'),
@@ -41,9 +36,15 @@ class Layout:
                     ]),
                  dbc.Row(self.graph_layout.get_layout()),
                  dbc.Row(children=self.signal_detector_layout.get_layout())
-            ]),
+                ]),
             self.engine_layout.get_layout()
             ])
+
+    def get_themes(self):
+        return [dbc.themes.BOOTSTRAP]
+
+    def get_layout(self):
+        return self.layout
 
     def register_callbacks(self, app, client_getter, redis_getter):
         rc(app, client_getter, redis_getter)

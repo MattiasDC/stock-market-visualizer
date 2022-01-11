@@ -16,33 +16,7 @@ class TickerLayout:
         self.show_ticker_table = 'show-ticker-table'
         self.ticker_table_id = 'ticker-table'
         self.collapse_ticker_table = 'collapse-ticker-table'
-
-    def get_add_ticker_input_n_submit(self):
-        return self.add_ticker_input, 'n_submit'
-
-    def get_add_ticker_input_value(self):
-        return self.add_ticker_input, 'value'
-
-    def get_add_ticker_button(self):
-        return self.add_ticker_button, 'n_clicks'
-
-    def get_ticker_table(self):
-        return self.ticker_table_id, 'data'
-
-    def get_ticker_table_selected(self):
-        return self.ticker_table_id, 'selected_rows'
-
-    def get_active_ticker(self):
-        return self.ticker_table_id, 'active_cell'
-
-    def get_ticker_table_virtual(self):
-        return self.ticker_table_id, 'derived_virtual_data'
-
-    def get_show_ticker_table(self):
-        return self.show_ticker_table, 'value'
-
-    def get_layout(self):
-        return dbc.Container(children=
+        self.layout = dbc.Container(children=
             [
             html.Div(
                 [
@@ -76,6 +50,33 @@ class TickerLayout:
                 id=self.collapse_ticker_table,
                 is_open=True)
             ])
+
+    def get_add_ticker_input_n_submit(self):
+        return self.add_ticker_input, 'n_submit'
+
+    def get_add_ticker_input_value(self):
+        return self.add_ticker_input, 'value'
+
+    def get_add_ticker_button(self):
+        return self.add_ticker_button, 'n_clicks'
+
+    def get_ticker_table(self):
+        return self.ticker_table_id, 'data'
+
+    def get_ticker_table_selected(self):
+        return self.ticker_table_id, 'selected_rows'
+
+    def get_active_ticker(self):
+        return self.ticker_table_id, 'active_cell'
+
+    def get_ticker_table_virtual(self):
+        return self.ticker_table_id, 'derived_virtual_data'
+
+    def get_show_ticker_table(self):
+        return self.show_ticker_table, 'value'
+
+    def get_layout(self):
+        return self.layout
 
     def register_callbacks(self, app, client_getter):
         helper = CallbackHelper(client_getter)
