@@ -206,6 +206,7 @@ class GraphLayout:
             )
 
         @app.callback(
+            Output(*self.engine_layout.get_id()),
             Output(*self.get_graph()),
             Input(*self.interval_layout.get_interval()),
             State(*self.date_layout.get_end_date()),
@@ -234,10 +235,10 @@ class GraphLayout:
 
             logger.info("Interval callback triggered: updating engine")
             client = client_getter()
-            api.update_engine(engine_id, end_date, client)
+            new_engine_id = api.update_engine(engine_id, end_date, client)
             indicators = self.__get_configured_indicators(
                 indicator_rows, selected_indicator_rows
             )
-            return self.__get_traces_and_layout(
-                engine_id, indicators, selected_ticker_rows, selected_signal_rows
+            return new_engine_id, self.__get_traces_and_layout(
+                new_engine_id, indicators, selected_ticker_rows, selected_signal_rows
             )

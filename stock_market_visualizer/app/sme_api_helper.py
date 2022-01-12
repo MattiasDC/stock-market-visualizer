@@ -162,7 +162,7 @@ def update_engine(engine_id, date, client):
     if engine_id is None:
         return None
 
-    return client.post(url=get_update_url(engine_id), params={"date": str(date)})
+    return client.post(url=get_update_url(engine_id), params={"date": str(date)}).json()
 
 
 @lru_cache(maxsize=MAX_CACHE_SIZE)

@@ -134,5 +134,5 @@ class DateLayout:
                 if engine_id is None:
                     return dash.no_update
 
-            api.update_engine(engine_id, end_date, client)
-            return engine_id, end_date
+            new_engine_id = api.update_engine(engine_id, end_date, client)
+            return new_engine_id, end_date
