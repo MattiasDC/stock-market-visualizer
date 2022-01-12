@@ -1,10 +1,7 @@
 import dash_bootstrap_components as dbc
-from dash import dash_table
-from dash import dcc
 from dash import html
 from dash_extensions.enrich import Output, Input, State
 
-from stock_market.common.factory import Factory
 from stock_market.ext.indicator import MovingAverage, ExponentialMovingAverage, Identity
 from utils.inspection import get_constructor_arguments
 

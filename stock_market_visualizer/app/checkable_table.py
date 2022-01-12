@@ -1,6 +1,5 @@
 from dash import dash_table
 from dash import dcc
-from dash import html
 import dash_bootstrap_components as dbc
 from dash_extensions.enrich import Output, Input
 

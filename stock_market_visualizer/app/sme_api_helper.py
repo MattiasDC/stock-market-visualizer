@@ -73,7 +73,7 @@ def get_supported_signal_detectors_url():
     settings = get_settings()
     return (
         concat_port(settings.api_url, port=settings.api_port)
-        + f"/getsupportedsignaldetectors"
+        + "/getsupportedsignaldetectors"
     )
 
 
@@ -112,7 +112,7 @@ def get_supported_indicators_url():
     settings = get_settings()
     return (
         concat_port(settings.api_url, port=settings.api_port)
-        + f"/getsupportedindicators"
+        + "/getsupportedindicators"
     )
 
 

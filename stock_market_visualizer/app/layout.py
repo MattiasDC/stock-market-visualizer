@@ -1,7 +1,4 @@
-from dash import dcc
-from dash import html
 import dash_bootstrap_components as dbc
-import datetime as dt
 
 from stock_market_visualizer.app.date import DateLayout
 from stock_market_visualizer.app.engine import EngineLayout

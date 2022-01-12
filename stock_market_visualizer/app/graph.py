@@ -9,7 +9,7 @@ import pandas as pd
 import plotly.graph_objects as go
 
 from stock_market.common.factory import Factory
-from stock_market.core import OHLC, Signal, Sentiment
+from stock_market.core import OHLC, Sentiment
 from stock_market.core.time_series import make_relative, TimeSeries
 from stock_market.ext.indicator import register_indicator_factories
 from stock_market.ext.signal import register_signal_detector_factories
@@ -169,7 +169,6 @@ class GraphLayout:
         figure, nof_ticker_lines = self.__get_traces(
             client, engine_id, indicators, figure, selected_tickers
         )
-        layout = {}
         if nof_ticker_lines - sum(map(len, indicators.values())) > 1:
             figure.update_yaxes(tickformat=",.1%")
         if nof_ticker_lines > 0:

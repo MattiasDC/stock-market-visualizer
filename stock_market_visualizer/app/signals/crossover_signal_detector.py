@@ -98,7 +98,8 @@ class CrossoverDetectorHandler(TickerDetectorHandler):
                 i["indicator_name"] for i in api.get_supported_indicators(client)
             ]:
                 logger.warning(
-                    f"{indicator} is implemented in the stock market visualizer, but not supported by the engine"
+                    f"{indicator} is implemented in the stock market visualizer, but"
+                    " not supported by the engine"
                 )
 
         for indicator in indicators:
@@ -123,15 +124,6 @@ class CrossoverDetectorHandler(TickerDetectorHandler):
         )
         def update_custom_name(custom_name, data):
             data["name"] = custom_name
-            return data
-
-        @app.callback(
-            Input(*crossover_layout.sentiment_dropdown_layout.get_sentiment()),
-            State(*crossover_layout.signal_data_placeholder_layout.get_data()),
-            Output(*crossover_layout.signal_data_placeholder_layout.get_data()),
-        )
-        def update_custom_name(sentiment, data):
-            data["sentiment"] = sentiment
             return data
 
     def __add_create_indicator_callbacks(self, name, indicator, arguments, getter):

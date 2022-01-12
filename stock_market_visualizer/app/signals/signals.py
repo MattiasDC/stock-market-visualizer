@@ -8,7 +8,6 @@ from utils.logging import get_logger
 
 import stock_market_visualizer.app.sme_api_helper as api
 from stock_market_visualizer.app.checkable_table import CheckableTableLayout
-from stock_market_visualizer.app.signals import *
 from stock_market_visualizer.app.signals.common import (
     get_api_supported_signal_detectors,
     get_supported_trivial_config_signal_detectors,
@@ -241,13 +240,15 @@ class SignalDetectorLayout:
         for sd in get_api_supported_signal_detectors(client):
             if sd not in detector_handlers.keys():
                 logger.warning(
-                    f"{sd} signal detector is not implemented in the stock market visualizer"
+                    f"{sd} signal detector is not implemented in the stock market"
+                    " visualizer"
                 )
 
         for sd in detector_handlers.keys():
             if sd not in get_api_supported_signal_detectors(client):
                 logger.warning(
-                    f"{sd} signal detector is implemented in the stock market visualizer, but not supported by the engine"
+                    f"{sd} signal detector is implemented in the stock market"
+                    " visualizer, but not supported by the engine"
                 )
 
         for _, l in detector_handlers.items():

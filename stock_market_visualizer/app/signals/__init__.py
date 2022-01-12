@@ -1,1 +1,1 @@
-from .signals import SignalDetectorLayout
+from .signals import SignalDetectorLayout  # noqa

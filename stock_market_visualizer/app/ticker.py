@@ -124,7 +124,7 @@ class TickerLayout:
         ):
             ticker_symbol = str.upper(ticker_symbol.rstrip())
             no_update = (dash.no_update, dash.no_update, dash.no_update)
-            if ticker_symbol in helper.get_tickers(rows) or not ticker_symbol:
+            if ticker_symbol in self.get_tickers(rows) or not ticker_symbol:
                 return no_update
 
             if n_clicks == 0 and n_submit == 0:
