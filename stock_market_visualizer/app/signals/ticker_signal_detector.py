@@ -7,22 +7,34 @@ from stock_market_visualizer.app.signals.common import SignalDetectorConfigurati
 from stock_market_visualizer.app.config import get_settings
 import stock_market_visualizer.app.sme_api_helper as api
 
+
 class TickerDropdownLayout:
     def __init__(self, name):
-        self.dropdown_name = f'config-dropdown-ticker-{name}'
-        self.layout = dcc.Dropdown(id=self.dropdown_name, options=[], placeholder='Ticker')
-    
+        self.dropdown_name = f"config-dropdown-ticker-{name}"
+        self.layout = dcc.Dropdown(
+            id=self.dropdown_name, options=[], placeholder="Ticker"
+        )
+
     def get_options(self):
-        return self.dropdown_name, 'options'
+        return self.dropdown_name, "options"
 
     def get_value(self):
-        return self.dropdown_name, 'value'
+        return self.dropdown_name, "value"
 
     def get_layout(self):
         return self.layout
 
+
 class TickerDetectorHandler:
-    def __init__(self, app, client, detector_cls, engine_layout, signal_data_placeholder_layout, dropdown_layout):
+    def __init__(
+        self,
+        app,
+        client,
+        detector_cls,
+        engine_layout,
+        signal_data_placeholder_layout,
+        dropdown_layout,
+    ):
         self.__app = app
         self.__client = client
         self.__detector_cls = detector_cls
@@ -31,19 +43,21 @@ class TickerDetectorHandler:
             Output(*dropdown_layout.get_options()),
             Output(*dropdown_layout.get_value()),
             Input(*engine_layout.get_id()),
-            State(*dropdown_layout.get_value()))
+            State(*dropdown_layout.get_value()),
+        )
         def update_dropdown_list(engine_id, value):
             options = self.__get_options(engine_id)
             if len(options) == 1:
-                value = options[0]['value']
+                value = options[0]["value"]
             return options, value
 
         @self.__app.callback(
             Input(*dropdown_layout.get_value()),
             State(*signal_data_placeholder_layout.get_data()),
-            Output(*signal_data_placeholder_layout.get_data()))
+            Output(*signal_data_placeholder_layout.get_data()),
+        )
         def update_active_ticker(ticker_value, data):
-            data['ticker'] = ticker_value
+            data["ticker"] = ticker_value
             return data
 
     def name(self):
@@ -60,21 +74,29 @@ class TickerDetectorHandler:
 
     def __get_options(self, engine_id):
         tickers = api.get_tickers(engine_id, self.__client)
-        return [{'label': t, 'value': t} for t in tickers]
+        return [{"label": t, "value": t} for t in tickers]
 
     def activate(self, engine_id):
         return engine_id
 
     def create(self, engine_id, data):
-        new_engine_id = api.add_signal_detector(engine_id,
-                                                {"static_name" : self.name(),
-                                                 "config" : json.dumps({"id" : randrange(get_settings().max_id_generator),
-                                                                        "ticker" : json.dumps(data['ticker'])})},
-                                                self.__client)
+        new_engine_id = api.add_signal_detector(
+            engine_id,
+            {
+                "static_name": self.name(),
+                "config": json.dumps(
+                    {
+                        "id": randrange(get_settings().max_id_generator),
+                        "ticker": json.dumps(data["ticker"]),
+                    }
+                ),
+            },
+            self.__client,
+        )
         return new_engine_id
 
     def get_id(self, config):
-        return json.loads(config)['id']
+        return json.loads(config)["id"]
 
 
 class TickerDetectorConfigurationLayout(SignalDetectorConfigurationLayout):
@@ -90,9 +112,11 @@ class TickerDetectorConfigurationLayout(SignalDetectorConfigurationLayout):
         return self.detector_cls.NAME().replace(" ", "")
 
     def get_handler(self, app, client):
-        return TickerDetectorHandler(app,
-                                     client,
-                                     self.detector_cls,
-                                     self.engine_layout,
-                                     self.signal_data_placeholder_layout,
-                                     self.ticker_dropdown)
+        return TickerDetectorHandler(
+            app,
+            client,
+            self.detector_cls,
+            self.engine_layout,
+            self.signal_data_placeholder_layout,
+            self.ticker_dropdown,
+        )
