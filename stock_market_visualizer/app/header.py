@@ -1,6 +1,5 @@
-from dash import dcc
-from dash import html
-from dash_extensions.enrich import Output, Input
+from dash import dcc, html
+from dash_extensions.enrich import Input, Output
 
 
 class HeaderLayout:

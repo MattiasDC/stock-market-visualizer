@@ -1,9 +1,9 @@
-import dash
-from dash import html
-from dash_extensions.enrich import Output, Input, State
 import json
 from random import randrange
 
+import dash
+from dash import html
+from dash_extensions.enrich import Input, Output, State
 from stock_market.ext.indicator import Identity
 from stock_market.ext.signal import CrossoverSignalDetector
 from utils.logging import get_logger
@@ -21,8 +21,8 @@ from stock_market_visualizer.app.signals.common import (
     SignalDetectorConfigurationLayout,
 )
 from stock_market_visualizer.app.signals.ticker_signal_detector import (
-    TickerDropdownLayout,
     TickerDetectorHandler,
+    TickerDropdownLayout,
 )
 
 logger = get_logger(__name__)
@@ -124,6 +124,15 @@ class CrossoverDetectorHandler(TickerDetectorHandler):
         )
         def update_custom_name(custom_name, data):
             data["name"] = custom_name
+            return data
+
+        @app.callback(
+            Input(*crossover_layout.sentiment_dropdown_layout.get_sentiment()),
+            State(*crossover_layout.signal_data_placeholder_layout.get_data()),
+            Output(*crossover_layout.signal_data_placeholder_layout.get_data()),
+        )
+        def update_sentiment(sentiment, data):
+            data["sentiment"] = sentiment
             return data
 
     def __add_create_indicator_callbacks(self, name, indicator, arguments, getter):

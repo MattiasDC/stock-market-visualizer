@@ -1,8 +1,8 @@
 from random import randrange
 
-from stock_market_visualizer.app.signals.common import SignalDetectorConfigurationLayout
-from stock_market_visualizer.app.config import get_settings
 import stock_market_visualizer.app.sme_api_helper as api
+from stock_market_visualizer.app.config import get_settings
+from stock_market_visualizer.app.signals.common import SignalDetectorConfigurationLayout
 
 
 class EmptyDetectorHandler:

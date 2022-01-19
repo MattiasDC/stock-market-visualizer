@@ -1,7 +1,7 @@
 import datetime
 import json
-from http import HTTPStatus
 from functools import lru_cache
+from http import HTTPStatus
 
 from stock_market.core import SignalSequence
 
@@ -148,6 +148,7 @@ def get_start_date(engine_id, client):
     return datetime.date.fromisoformat(response.text.strip('"'))
 
 
+@lru_cache(maxsize=MAX_CACHE_SIZE)
 def get_date(engine_id, client):
     if engine_id is None:
         return None
@@ -158,6 +159,7 @@ def get_date(engine_id, client):
     return datetime.date.fromisoformat(response.text.strip('"'))
 
 
+@lru_cache(maxsize=MAX_CACHE_SIZE)
 def update_engine(engine_id, date, client):
     if engine_id is None:
         return None
@@ -169,10 +171,10 @@ def update_engine(engine_id, date, client):
 def get_tickers(engine_id, client):
     if engine_id is None:
         return []
-
     return client.get(url=get_tickers_url(engine_id)).json()
 
 
+@lru_cache(maxsize=MAX_CACHE_SIZE)
 def get_ticker_ohlc(engine_id, ticker, client):
     if engine_id is None:
         return None
@@ -244,6 +246,7 @@ def remove_signal_detector(engine_id, signal_detector_id, client):
     return response.text.strip('"')
 
 
+@lru_cache(maxsize=MAX_CACHE_SIZE)
 def get_signals(engine_id, client):
     if engine_id is None:
         return SignalSequence()

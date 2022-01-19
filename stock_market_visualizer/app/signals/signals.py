@@ -1,19 +1,19 @@
-import dash
-from dash import html
-import dash_bootstrap_components as dbc
-from dash_extensions.enrich import Output, Input, State
 import json
 
+import dash
+import dash_bootstrap_components as dbc
+from dash import html
+from dash_extensions.enrich import Input, Output, State
 from utils.logging import get_logger
 
 import stock_market_visualizer.app.sme_api_helper as api
 from stock_market_visualizer.app.checkable_table import CheckableTableLayout
 from stock_market_visualizer.app.signals.common import (
-    get_api_supported_signal_detectors,
-    get_supported_trivial_config_signal_detectors,
-    get_supported_ticker_based_signal_detectors,
-    get_supported_signal_detectors,
     SignalDataPlaceholderLayout,
+    get_api_supported_signal_detectors,
+    get_supported_signal_detectors,
+    get_supported_ticker_based_signal_detectors,
+    get_supported_trivial_config_signal_detectors,
 )
 from stock_market_visualizer.app.signals.crossover_signal_detector import (
     CrossoverDetectorConfigurationLayout,
@@ -128,36 +128,24 @@ class SignalDetectorLayout:
         @app.callback(
             Output(*self.engine_layout.get_id()),
             Output(self.signal_edit_placeholder_id, "hidden"),
-            Output(*self.signal_detector_table.get_table_selected()),
             Input(self.add_button_id, "n_clicks"),
             State(*self.engine_layout.get_id()),
             State(self.legend_id, "children"),
             State(*self.signal_detector_data_layout.get_data()),
-            State(*self.signal_detector_table.get_table_selected()),
         )
-        def add_signal_detector(
-            n_clicks, engine_id, handler_name, data, selected_signal_detectors
-        ):
+        def add_signal_detector(n_clicks, engine_id, handler_name, data):
             if n_clicks == 0:
                 return dash.no_update, dash.no_update, dash.no_update
             handler = detector_handlers[handler_name]
-
-            signal_detectors_before = api.get_signal_detectors(engine_id, client)
             new_engine_id = handler.create(engine_id, data)
-            signal_detectors_after = api.get_signal_detectors(new_engine_id, client)
 
-            if signal_detectors_before != signal_detectors_after:
-                assert len(signal_detectors_after) - len(signal_detectors_before) == 1
-                selected_signal_detectors.append(len(signal_detectors_before))
-
-            return new_engine_id, new_engine_id != engine_id, selected_signal_detectors
+            return new_engine_id, new_engine_id != engine_id
 
         def register_dropdown_callback(handler):
             @app.callback(
                 Output(*self.engine_layout.get_id()),
                 Output(self.signal_edit_fieldset_id, "children"),
                 Output(self.signal_edit_placeholder_id, "hidden"),
-                Output(*self.signal_detector_table.get_table_selected()),
                 Input(
                     *self.signal_detector_table.get_dropdown().get_item_n_clicks(
                         handler.id()
@@ -165,21 +153,11 @@ class SignalDetectorLayout:
                 ),
                 State(self.signal_edit_fieldset_id, "children"),
                 State(*self.engine_layout.get_id()),
-                State(*self.signal_detector_table.get_table_selected()),
             )
-            def add_signal_detector(
-                clicks, fieldset_children, engine_id, selected_signal_detectors
-            ):
+            def add_signal_detector(clicks, fieldset_children, engine_id):
                 if clicks == 0:
-                    return (
-                        dash.no_update,
-                        dash.no_update,
-                        dash.no_update,
-                        dash.no_update,
-                    )
-                signal_detectors_before = api.get_signal_detectors(engine_id, client)
+                    return (dash.no_update, dash.no_update, dash.no_update)
                 engine_id = handler.activate(engine_id)
-                signal_detectors_after = api.get_signal_detectors(engine_id, client)
 
                 hide_fieldset = False
                 for child in fieldset_children:
@@ -197,17 +175,7 @@ class SignalDetectorLayout:
                         else:
                             hide_fieldset = True
 
-                if signal_detectors_before != signal_detectors_after:
-                    assert (
-                        len(signal_detectors_after) - len(signal_detectors_before) == 1
-                    )
-                    selected_signal_detectors.append(len(signal_detectors_before))
-                return (
-                    engine_id,
-                    fieldset_children,
-                    hide_fieldset,
-                    selected_signal_detectors,
-                )
+                return (engine_id, fieldset_children, hide_fieldset)
 
         @app.callback(
             Output(*self.engine_layout.get_id()),

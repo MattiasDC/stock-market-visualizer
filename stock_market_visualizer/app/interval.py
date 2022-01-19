@@ -1,4 +1,5 @@
 import datetime as dt
+
 from dash import dcc
 
 from stock_market_visualizer.app.config import get_settings

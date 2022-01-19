@@ -1,11 +1,12 @@
-from dash import dcc
-from dash_extensions.enrich import Output, Input, State
 import json
 from random import randrange
 
-from stock_market_visualizer.app.signals.common import SignalDetectorConfigurationLayout
-from stock_market_visualizer.app.config import get_settings
+from dash import dcc
+from dash_extensions.enrich import Input, Output, State
+
 import stock_market_visualizer.app.sme_api_helper as api
+from stock_market_visualizer.app.config import get_settings
+from stock_market_visualizer.app.signals.common import SignalDetectorConfigurationLayout
 
 
 class TickerDropdownLayout:

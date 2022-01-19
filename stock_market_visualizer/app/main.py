@@ -1,7 +1,7 @@
-from fastapi import FastAPI
-from starlette.middleware.wsgi import WSGIMiddleware
 import uvicorn as uvicorn
 from dash_extensions.enrich import DashProxy, MultiplexerTransform
+from fastapi import FastAPI
+from starlette.middleware.wsgi import WSGIMiddleware
 
 from stock_market_visualizer.app.config import get_settings
 from stock_market_visualizer.app.layout import Layout

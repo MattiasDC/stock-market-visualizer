@@ -1,6 +1,3 @@
-Configure line vs rectangle signal drawing (dropdown)
-Improve speed of signal drawing
-cache queries from engine (when engine changes on update)
 Graph signals
 Add disclaimer
 add adsense configuration

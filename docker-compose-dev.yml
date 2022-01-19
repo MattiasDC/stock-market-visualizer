@@ -1,3 +1,4 @@
+---
 version: '3.7'
 
 services:
@@ -20,9 +21,16 @@ services:
 
   api:
     container_name: sme-api-smv
-    #image: repo.treescale.com/xelicon/stock-market-engine:v0.7.0
+    # image: repo.treescale.com/xelicon/stock-market-engine:v0.7.0
     image: stock-market-engine:v0.8.0
-    command: uvicorn stock_market_engine.main:app --host 0.0.0.0 --port 8001 --lifespan=on --use-colors --log-level debug
+    command: >
+      uvicorn
+        stock_market_engine.main:app
+        --host 0.0.0.0
+        --port 8001
+        --lifespan=on
+        --use-colors
+        --log-level debug
     ports:
       - 8001:8001
     environment:
@@ -30,7 +38,7 @@ services:
       - MAX_TICKER_SYMBOL_LENGTH=10
     depends_on:
       - redis
-      
+
   redis:
     container_name: redis-smv
     image: redis:alpine

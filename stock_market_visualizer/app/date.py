@@ -1,10 +1,9 @@
-import dash
-from dash import dcc
-from dash import html
-import dash_bootstrap_components as dbc
-from dash_extensions.enrich import Output, Input, State
 import datetime as dt
 
+import dash
+import dash_bootstrap_components as dbc
+from dash import dcc, html
+from dash_extensions.enrich import Input, Output, State
 from utils.dateutils import from_sdate
 
 import stock_market_visualizer.app.sme_api_helper as api

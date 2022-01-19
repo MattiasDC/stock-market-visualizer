@@ -1,13 +1,11 @@
-from dash import dcc
-from dash import html
-
+from dash import dcc, html
 from stock_market.core import Sentiment
 from stock_market.ext.signal import (
-    MonthlySignalDetector,
     BiMonthlySignalDetector,
-    GoldenCrossSignalDetector,
-    DeathCrossSignalDetector,
     CrossoverSignalDetector,
+    DeathCrossSignalDetector,
+    GoldenCrossSignalDetector,
+    MonthlySignalDetector,
 )
 
 import stock_market_visualizer.app.sme_api_helper as api
