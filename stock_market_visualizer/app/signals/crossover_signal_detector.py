@@ -126,6 +126,15 @@ class CrossoverDetectorHandler(TickerDetectorHandler):
             data["name"] = custom_name
             return data
 
+        @app.callback(
+            Input(*crossover_layout.sentiment_dropdown_layout.get_sentiment()),
+            State(*crossover_layout.signal_data_placeholder_layout.get_data()),
+            Output(*crossover_layout.signal_data_placeholder_layout.get_data()),
+        )
+        def update_sentiment(sentiment, data):
+            data["sentiment"] = sentiment
+            return data
+
     def __add_create_indicator_callbacks(self, name, indicator, arguments, getter):
         if indicator != Identity:
             modal = getter.get_modal_layout()

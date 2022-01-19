@@ -162,21 +162,18 @@ class IndicatorLayout:
                 State(*self.checkable_table.get_table()),
                 State(*self.ticker_layout.get_active_ticker()),
                 State(*self.ticker_layout.get_ticker_table_virtual()),
-                State(*self.checkable_table.get_table_selected()),
                 [
                     State(*self.modal_creator.get_argument_value(indicator, argument))
                     for argument in arguments
                 ],
                 Output(*self.modal_creator.get_is_open(indicator)),
                 Output(*self.checkable_table.get_table()),
-                Output(*self.checkable_table.get_table_selected()),
             )
             def create_indicator(
                 n_clicks,
                 indicator_rows,
                 ticker_cell,
                 ticker_rows,
-                selected_indicators,
                 arguments,
             ):
                 if not isinstance(arguments, list):
@@ -194,8 +191,7 @@ class IndicatorLayout:
 
                 if new_entry not in indicator_rows:
                     indicator_rows.append(new_entry)
-                    selected_indicators.append(len(indicator_rows) - 1)
-                return False, indicator_rows, selected_indicators
+                return False, indicator_rows
 
         indicators = get_indicators()
         for indicator in indicators:

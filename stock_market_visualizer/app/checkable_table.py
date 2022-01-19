@@ -21,9 +21,6 @@ class CheckableTableLayout:
     def get_table(self):
         return self.table_id, "data"
 
-    def get_table_selected(self):
-        return self.table_id, "selected_rows"
-
     def get_show_table(self):
         return self.show_table, "value"
 
@@ -56,8 +53,6 @@ class CheckableTableLayout:
                         sort_action="native",
                         sort_by=[{"column_id": self.main_column, "direction": "asc"}],
                         row_deletable=True,
-                        row_selectable="multi",
-                        selected_rows=[],
                         style_table={"margin-top": 5},
                     ),
                     id=self.collapse_table_id,

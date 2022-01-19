@@ -44,14 +44,13 @@ class GraphLayout:
     def get_graph(self):
         return self.stock_market_graph, "figure"
 
-    def __get_configured_indicators(self, rows, selected_rows):
+    def __get_configured_indicators(self, rows):
         factory = register_indicator_factories(Factory())
         indicators_per_ticker = defaultdict(list)
         for i, row in enumerate(rows):
-            if i in selected_rows:
-                indicators_per_ticker[row["ticker-col"]].append(
-                    factory.create(row["indicator"]["name"], row["indicator"]["config"])
-                )
+            indicators_per_ticker[row["ticker-col"]].append(
+                factory.create(row["indicator"]["name"], row["indicator"]["config"])
+            )
         return indicators_per_ticker
 
     def __create_indicator_traces(
@@ -85,39 +84,34 @@ class GraphLayout:
         assert sentiment == Sentiment.BEARISH
         return "red"
 
-    def __get_enabled_signal_detectors(
-        self, engine_id, client, enabled_signal_detectors
-    ):
+    def __get_signal_detectors(self, engine_id, client):
         signal_detector_factory = register_signal_detector_factories(Factory())
-        enabled_signal_detector_ids = []
+        signal_detector_ids = []
         for i, sd in enumerate(api.get_signal_detectors(engine_id, client)):
             config = sd["config"]
             if type(config) is not str:
                 config = json.dumps(config)
             signal_detector = signal_detector_factory.create(sd["static_name"], config)
-            if i in enabled_signal_detectors:
-                enabled_signal_detector_ids.append(signal_detector.id)
-        return enabled_signal_detector_ids
+            signal_detector_ids.append(signal_detector.id)
+        return signal_detector_ids
 
-    def __get_signal_lines(self, engine_id, client, figure, enabled_signal_detectors):
-        enabled_signal_detector_ids = self.__get_enabled_signal_detectors(
-            engine_id, client, enabled_signal_detectors
-        )
+    def __get_signal_lines(self, engine_id, client, figure):
+        signal_detector_ids = self.__get_signal_detectors(engine_id, client)
         signal_sequence = api.get_signals(engine_id, client)
         date_dict = defaultdict(list)
         for s in signal_sequence.signals:
-            if s.id in enabled_signal_detector_ids:
+            if s.id in signal_detector_ids:
                 date_dict[s.date].append(s)
 
         for date, signals in date_dict.items():
             for s in signals[:-1]:
-                figure.add_vrect(
-                    x0=date, x1=date, line_color=self.__get_color(s.sentiment)
+                figure.add_vline(
+                    x=date,
+                    line_color=self.__get_color(s.sentiment),
                 )
-
-            figure.add_vrect(
-                x0=date,
-                x1=date,
+            figure.add_vline(
+                # https://github.com/plotly/plotly.py/issues/3065
+                x=dt.datetime.combine(date, dt.time()).timestamp() * 1000,
                 line_color=self.__get_color(signals[-1].sentiment),
                 annotation_text=", ".join([s.name for s in signals]),
                 annotation_position="top left",
@@ -125,12 +119,8 @@ class GraphLayout:
             )
         return figure
 
-    def __get_traces(self, client, engine_id, indicators, figure, selected_tickers):
-        tickers = [
-            t
-            for i, t in enumerate(api.get_tickers(engine_id, client))
-            if i in selected_tickers
-        ]
+    def __get_traces(self, client, engine_id, indicators, figure):
+        tickers = api.get_tickers(engine_id, client)
         if len(tickers) == 0:
             return figure, 0
 
@@ -162,19 +152,15 @@ class GraphLayout:
             figure = self.__create_indicator_traces(indicators, ticker, close, figure)
         return figure, len(closes)
 
-    def __get_traces_and_layout(
-        self, client, engine_id, indicators, selected_tickers, selected_signal_indices
-    ):
+    def __get_traces_and_layout(self, client, engine_id, indicators):
         figure = go.Figure()
         figure, nof_ticker_lines = self.__get_traces(
-            client, engine_id, indicators, figure, selected_tickers
+            client, engine_id, indicators, figure
         )
         if nof_ticker_lines - sum(map(len, indicators.values())) > 1:
             figure.update_yaxes(tickformat=",.1%")
         if nof_ticker_lines > 0:
-            figure = self.__get_signal_lines(
-                engine_id, client, figure, selected_signal_indices
-            )
+            figure = self.__get_signal_lines(engine_id, client, figure)
         figure.update_layout(template="plotly_white")
         return figure
 
@@ -185,25 +171,10 @@ class GraphLayout:
             Output(*self.get_graph()),
             Input("indicator-table", "data"),
             Input(*self.engine_layout.get_id()),
-            Input("ticker-table", "selected_rows"),
-            Input("indicator-table", "selected_rows"),
-            Input("signal-table", "selected_rows"),
         )
-        def change(
-            rows,
-            engine_id,
-            selected_ticker_rows,
-            selected_indicator_rows,
-            selected_signal_rows,
-        ):
-            indicators = self.__get_configured_indicators(rows, selected_indicator_rows)
-            return self.__get_traces_and_layout(
-                client,
-                engine_id,
-                indicators,
-                selected_ticker_rows,
-                selected_signal_rows,
-            )
+        def change(rows, engine_id):
+            indicators = self.__get_configured_indicators(rows)
+            return self.__get_traces_and_layout(client, engine_id, indicators)
 
         @app.callback(
             Output(*self.engine_layout.get_id()),
@@ -212,19 +183,8 @@ class GraphLayout:
             State(*self.date_layout.get_end_date()),
             State(*self.engine_layout.get_id()),
             State("indicator-table", "data"),
-            State("ticker-table", "selected_rows"),
-            State("indicator-table", "selected_rows"),
-            State("signal-table", "selected_rows"),
         )
-        def update_on_interval(
-            n_intervals,
-            end_date,
-            engine_id,
-            indicator_rows,
-            selected_ticker_rows,
-            selected_indicator_rows,
-            selected_signal_rows,
-        ):
+        def update_on_interval(n_intervals, end_date, engine_id, indicator_rows):
             end_date = from_sdate(end_date)
             now = dt.datetime.now()
             # We still want to update on interval if we just crossed a day
@@ -236,9 +196,7 @@ class GraphLayout:
             logger.info("Interval callback triggered: updating engine")
             client = client_getter()
             new_engine_id = api.update_engine(engine_id, end_date, client)
-            indicators = self.__get_configured_indicators(
-                indicator_rows, selected_indicator_rows
-            )
+            indicators = self.__get_configured_indicators(indicator_rows)
             return new_engine_id, self.__get_traces_and_layout(
-                new_engine_id, indicators, selected_ticker_rows, selected_signal_rows
+                new_engine_id, indicators
             )

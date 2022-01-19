@@ -39,9 +39,6 @@ class RestoreableStateLayout:
             Output("engine-id", "data"),
             Output("start-date-picker", "date"),
             Output("end-date-picker", "date"),
-            Output("ticker-table", "selected_rows"),
-            Output("indicator-table", "selected_rows"),
-            Output("signal-table", "selected_rows"),
             Output("indicator-table", "data"),
             Output("show-ticker-table", "value"),
             Output("show-indicator-table", "value"),
@@ -60,9 +57,6 @@ class RestoreableStateLayout:
                 "engine-id",
                 "start-date",
                 "end-date",
-                "selected-tickers",
-                "selected-indicators",
-                "selected-signals",
                 "indicators",
                 "show-ticker-table",
                 "show-indicator-table",
@@ -81,9 +75,6 @@ class RestoreableStateLayout:
             State("engine-id", "data"),
             State("start-date-picker", "date"),
             State("end-date-picker", "date"),
-            State("ticker-table", "selected_rows"),
-            State("indicator-table", "selected_rows"),
-            State("signal-table", "selected_rows"),
             State("indicator-table", "data"),
             State("show-ticker-table", "value"),
             State("show-indicator-table", "value"),
@@ -96,9 +87,6 @@ class RestoreableStateLayout:
             engine_id,
             start_date,
             end_date,
-            selected_tickers,
-            selected_indicators,
-            selected_signals,
             indicators,
             show_ticker_table,
             show_indicator_table,
@@ -112,9 +100,6 @@ class RestoreableStateLayout:
             state["engine-id"] = engine_id
             state["start-date"] = start_date
             state["end-date"] = end_date
-            state["selected-tickers"] = selected_tickers
-            state["selected-indicators"] = selected_indicators
-            state["selected-signals"] = selected_signals
             state["indicators"] = indicators
             state["show-ticker-table"] = show_ticker_table
             state["show-indicator-table"] = show_indicator_table
