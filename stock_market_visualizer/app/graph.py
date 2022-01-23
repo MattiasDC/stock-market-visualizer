@@ -13,6 +13,7 @@ from stock_market.common.factory import Factory
 from stock_market.core import OHLC, Sentiment
 from stock_market.core.time_series import TimeSeries, make_relative
 from stock_market.ext.indicator import register_indicator_factories
+from utils.algos import all_equal
 from utils.dateutils import from_sdate
 from utils.logging import get_logger
 
@@ -82,11 +83,46 @@ class GraphLayout:
         if sentiment == Sentiment.NEUTRAL:
             return "grey"
         elif sentiment == Sentiment.BULLISH:
-            return "green"
+            return "lightgreen"
         assert sentiment == Sentiment.BEARISH
-        return "red"
+        return "crimson"
 
-    def __get_signal_lines(self, engine_id, client, figure):
+    def __add_signals(self, figure, index, signals):
+        figure.add_trace(
+            go.Scatter(
+                name=signals[0].name,
+                x=[s.date for s in signals],
+                y=[index] * len(signals),
+                mode="markers",
+            ),
+            col=1,
+            row=2,
+        )
+        return figure
+
+    def __add_ticker_signals(self, figure, signals, ticker_closes):
+        ticker_close = ticker_closes[signals[0].tickers[0].symbol]
+        figure.add_trace(
+            go.Scatter(
+                name=signals[0].name,
+                x=[s.date for s in signals],
+                y=[
+                    ticker_close.time_values[
+                        ticker_close.time_values.date == s.date
+                    ].value.iloc[0]
+                    for s in signals
+                ],
+                mode="markers",
+                marker_symbol="triangle-down",
+                marker_size=12,
+                marker_color=self.__get_color(signals[0].sentiment),
+            ),
+            col=1,
+            row=1,
+        )
+        return figure
+
+    def __get_signal_lines(self, engine_id, client, ticker_closes, figure):
         def get_signal_name(s):
             return s.name
 
@@ -96,25 +132,22 @@ class GraphLayout:
         grouped_signals = groupby(all_signals, key=get_signal_name)
         for i, (g, signals) in enumerate(grouped_signals):
             signals = list(signals)
-            figure.add_trace(
-                go.Scatter(
-                    name=signals[0].name,
-                    x=[s.date for s in signals],
-                    y=[i] * len(signals),
-                    mode="markers",
-                ),
-                col=1,
-                row=2,
-            )
+            assert all_equal([s.tickers for s in signals])
+            if len(signals[0].tickers) == 1:
+                self.__add_ticker_signals(figure, signals, ticker_closes)
+            else:
+                self.__add_signals(figure, i, signals)
+
         figure.update_yaxes(visible=False, col=1, row=2)
         return figure
 
-    def __get_traces(self, client, engine_id, indicators, figure):
+    def __get_ticker_closes(self, client, engine_id):
         tickers = api.get_tickers(engine_id, client)
-        if len(tickers) == 0:
-            return figure, 0
-
         closes = {}
+
+        if len(tickers) == 0:
+            return closes
+
         for ticker in tickers:
             ohlc_json = api.get_ticker_ohlc(engine_id, ticker, client)
             if ohlc_json is None:
@@ -132,7 +165,9 @@ class GraphLayout:
                 )
                 for ticker, relative_close in closes
             }
+        return closes
 
+    def __get_traces(self, closes, indicators, figure):
         for ticker, close in closes.items():
             figure.add_trace(
                 go.Scatter(x=close.dates, y=close.values, name=ticker, mode="lines"),
@@ -149,13 +184,13 @@ class GraphLayout:
         figure = make_subplots(
             rows=2, cols=1, shared_xaxes=share_x_axes, row_heights=[0.9, 0.1]
         )
-        figure, nof_ticker_lines = self.__get_traces(
-            client, engine_id, indicators, figure
-        )
+
+        ticker_closes = self.__get_ticker_closes(client, engine_id)
+        figure, nof_ticker_lines = self.__get_traces(ticker_closes, indicators, figure)
         if nof_ticker_lines - sum(map(len, indicators.values())) > 1:
             figure.update_yaxes(tickformat=",.1%", row=1, col=1)
         if nof_ticker_lines > 0:
-            figure = self.__get_signal_lines(engine_id, client, figure)
+            figure = self.__get_signal_lines(engine_id, client, ticker_closes, figure)
         figure.update_layout(template="plotly_white")
         return figure
 

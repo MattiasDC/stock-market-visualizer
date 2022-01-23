@@ -11,7 +11,6 @@ WORKDIR /app
 
 RUN python -m pip install --no-cache-dir --upgrade pip
 
-COPY setup.py .
 COPY pyproject.toml .
 COPY setup.cfg .
 
