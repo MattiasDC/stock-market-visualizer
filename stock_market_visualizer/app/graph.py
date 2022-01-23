@@ -1,6 +1,6 @@
 import datetime as dt
-import json
 from collections import defaultdict
+from itertools import groupby
 
 import dash
 import dash_bootstrap_components as dbc
@@ -8,11 +8,11 @@ import pandas as pd
 import plotly.graph_objects as go
 from dash import dcc
 from dash_extensions.enrich import Input, Output, State
+from plotly.subplots import make_subplots
 from stock_market.common.factory import Factory
 from stock_market.core import OHLC, Sentiment
 from stock_market.core.time_series import TimeSeries, make_relative
 from stock_market.ext.indicator import register_indicator_factories
-from stock_market.ext.signal import register_signal_detector_factories
 from utils.dateutils import from_sdate
 from utils.logging import get_logger
 
@@ -71,7 +71,9 @@ class GraphLayout:
                         y=indicator_values.values,
                         name=indicator_values.name,
                         mode="lines",
-                    )
+                    ),
+                    row=1,
+                    col=1,
                 )
 
         return figure
@@ -84,39 +86,27 @@ class GraphLayout:
         assert sentiment == Sentiment.BEARISH
         return "red"
 
-    def __get_signal_detectors(self, engine_id, client):
-        signal_detector_factory = register_signal_detector_factories(Factory())
-        signal_detector_ids = []
-        for i, sd in enumerate(api.get_signal_detectors(engine_id, client)):
-            config = sd["config"]
-            if type(config) is not str:
-                config = json.dumps(config)
-            signal_detector = signal_detector_factory.create(sd["static_name"], config)
-            signal_detector_ids.append(signal_detector.id)
-        return signal_detector_ids
-
     def __get_signal_lines(self, engine_id, client, figure):
-        signal_detector_ids = self.__get_signal_detectors(engine_id, client)
-        signal_sequence = api.get_signals(engine_id, client)
-        date_dict = defaultdict(list)
-        for s in signal_sequence.signals:
-            if s.id in signal_detector_ids:
-                date_dict[s.date].append(s)
+        def get_signal_name(s):
+            return s.name
 
-        for date, signals in date_dict.items():
-            for s in signals[:-1]:
-                figure.add_vline(
-                    x=date,
-                    line_color=self.__get_color(s.sentiment),
-                )
-            figure.add_vline(
-                # https://github.com/plotly/plotly.py/issues/3065
-                x=dt.datetime.combine(date, dt.time()).timestamp() * 1000,
-                line_color=self.__get_color(signals[-1].sentiment),
-                annotation_text=", ".join([s.name for s in signals]),
-                annotation_position="top left",
-                annotation_textangle=90,
+        all_signals = sorted(
+            api.get_signals(engine_id, client).signals, key=get_signal_name
+        )
+        grouped_signals = groupby(all_signals, key=get_signal_name)
+        for i, (g, signals) in enumerate(grouped_signals):
+            signals = list(signals)
+            figure.add_trace(
+                go.Scatter(
+                    name=signals[0].name,
+                    x=[s.date for s in signals],
+                    y=[i] * len(signals),
+                    mode="markers",
+                ),
+                col=1,
+                row=2,
             )
+        figure.update_yaxes(visible=False, col=1, row=2)
         return figure
 
     def __get_traces(self, client, engine_id, indicators, figure):
@@ -145,7 +135,9 @@ class GraphLayout:
 
         for ticker, close in closes.items():
             figure.add_trace(
-                go.Scatter(x=close.dates, y=close.values, name=ticker, mode="lines")
+                go.Scatter(x=close.dates, y=close.values, name=ticker, mode="lines"),
+                row=1,
+                col=1,
             )
 
         for ticker, close in closes.items():
@@ -153,12 +145,15 @@ class GraphLayout:
         return figure, len(closes)
 
     def __get_traces_and_layout(self, client, engine_id, indicators):
-        figure = go.Figure()
+        share_x_axes = len(api.get_signals(engine_id, client).signals) > 0
+        figure = make_subplots(
+            rows=2, cols=1, shared_xaxes=share_x_axes, row_heights=[0.9, 0.1]
+        )
         figure, nof_ticker_lines = self.__get_traces(
             client, engine_id, indicators, figure
         )
         if nof_ticker_lines - sum(map(len, indicators.values())) > 1:
-            figure.update_yaxes(tickformat=",.1%")
+            figure.update_yaxes(tickformat=",.1%", row=1, col=1)
         if nof_ticker_lines > 0:
             figure = self.__get_signal_lines(engine_id, client, figure)
         figure.update_layout(template="plotly_white")
