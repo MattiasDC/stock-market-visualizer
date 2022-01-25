@@ -79,52 +79,52 @@ class GraphLayout:
 
         return figure
 
-    def __get_color(self, sentiment):
-        if sentiment == Sentiment.NEUTRAL:
-            return "grey"
-        elif sentiment == Sentiment.BULLISH:
-            return "lightgreen"
-        assert sentiment == Sentiment.BEARISH
-        return "crimson"
-
-    def __add_signals(self, figure, index, signals):
-        figure.add_trace(
-            go.Scatter(
-                name=signals[0].name,
-                x=[s.date for s in signals],
-                y=[index] * len(signals),
-                mode="markers",
-            ),
-            col=1,
-            row=2,
-        )
-        return figure
-
-    def __add_ticker_signals(self, figure, signals, ticker_closes):
-        ticker_close = ticker_closes[signals[0].tickers[0].symbol]
-        figure.add_trace(
-            go.Scatter(
-                name=signals[0].name,
-                x=[s.date for s in signals],
-                y=[
-                    ticker_close.time_values[
-                        ticker_close.time_values.date == s.date
-                    ].value.iloc[0]
-                    for s in signals
-                ],
-                mode="markers",
-                marker_symbol="triangle-down",
-                marker_size=12,
-                marker_color=self.__get_color(signals[0].sentiment),
-            ),
-            col=1,
-            row=1,
-        )
-        return figure
-
     def __get_signal_lines(self, engine_id, client, ticker_closes, figure):
         def get_signal_name(s):
             return s.name
+
+        def __get_color(sentiment):
+            if sentiment == Sentiment.NEUTRAL:
+                return "grey"
+            elif sentiment == Sentiment.BULLISH:
+                return "lightgreen"
+            assert sentiment == Sentiment.BEARISH
+            return "crimson"
+
+        def __add_signals(figure, index, signals):
+            figure.add_trace(
+                go.Scatter(
+                    name=signals[0].name,
+                    x=[s.date for s in signals],
+                    y=[index] * len(signals),
+                    mode="markers",
+                ),
+                col=1,
+                row=2,
+            )
+            return figure
+
+        def __add_ticker_signals(figure, signals, ticker_closes):
+            ticker_close = ticker_closes[signals[0].tickers[0].symbol]
+            figure.add_trace(
+                go.Scatter(
+                    name=signals[0].name,
+                    x=[s.date for s in signals],
+                    y=[
+                        ticker_close.time_values[
+                            ticker_close.time_values.date == s.date
+                        ].value.iloc[0]
+                        for s in signals
+                    ],
+                    mode="markers",
+                    marker_symbol="triangle-down",
+                    marker_size=12,
+                    marker_color=__get_color(signals[0].sentiment),
+                ),
+                col=1,
+                row=1,
+            )
+            return figure
 
         all_signals = sorted(
             api.get_signals(engine_id, client).signals, key=get_signal_name
@@ -134,9 +134,9 @@ class GraphLayout:
             signals = list(signals)
             assert all_equal([s.tickers for s in signals])
             if len(signals[0].tickers) == 1:
-                self.__add_ticker_signals(figure, signals, ticker_closes)
+                __add_ticker_signals(figure, signals, ticker_closes)
             else:
-                self.__add_signals(figure, i, signals)
+                __add_signals(figure, i, signals)
 
         figure.update_yaxes(visible=False, col=1, row=2)
         return figure
