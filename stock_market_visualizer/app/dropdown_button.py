@@ -2,7 +2,7 @@ import dash_bootstrap_components as dbc
 
 
 class DropdownButton:
-    def __init__(self, identifier, name, items, disabled):
+    def __init__(self, identifier, name, items, disabled, style=None):
         self.identifier = identifier
         self.name = name
         self.items = items
@@ -17,6 +17,7 @@ class DropdownButton:
                 for item in sorted(self.items)
             ],
             disabled=self.disabled,
+            style=style,
         )
 
     def get_label(self):

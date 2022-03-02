@@ -1,8 +1,8 @@
-from random import randrange
-
 import stock_market_visualizer.app.sme_api_helper as api
-from stock_market_visualizer.app.config import get_settings
-from stock_market_visualizer.app.signals.common import SignalDetectorConfigurationLayout
+from stock_market_visualizer.app.signals.common import (
+    SignalDetectorConfigurationLayout,
+    get_random_detector_id,
+)
 
 
 class EmptyDetectorHandler:
@@ -19,15 +19,17 @@ class EmptyDetectorHandler:
     def activate(self, engine_id):
         if engine_id is None:
             return None
-        engine_id = api.add_signal_detector(
+        new_engine_id = api.add_signal_detector(
             engine_id,
             {
                 "static_name": self.name(),
-                "config": str(randrange(get_settings().max_id_generator)),
+                "config": str(get_random_detector_id(engine_id, self.__client)),
             },
             self.__client,
         )
-        return engine_id
+        if new_engine_id is None:
+            return engine_id
+        return new_engine_id
 
     def get_id(self, config):
         return config

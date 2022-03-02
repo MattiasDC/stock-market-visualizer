@@ -1,14 +1,41 @@
+import json
+
 from dash import dcc, html
+from stock_market.common.factory import Factory
 from stock_market.core import Sentiment
 from stock_market.ext.signal import (
     BiMonthlySignalDetector,
     CrossoverSignalDetector,
     DeathCrossSignalDetector,
     GoldenCrossSignalDetector,
+    GraphSignalDetector,
     MonthlySignalDetector,
+    register_signal_detector_factories,
 )
+from utils.rnd import get_random_int_excluding
 
 import stock_market_visualizer.app.sme_api_helper as api
+from stock_market_visualizer.app.config import get_settings
+
+
+def get_sentiment_color(sentiment):
+    if sentiment == Sentiment.NEUTRAL:
+        return "grey"
+    elif sentiment == Sentiment.BULLISH:
+        return "lightgreen"
+    assert sentiment == Sentiment.BEARISH
+    return "crimson"
+
+
+def get_random_detector_id(engine_id, client):
+    ids = []
+    factory = register_signal_detector_factories(Factory())
+    for detector_json in api.get_signal_detectors(engine_id, client):
+        detector = factory.create(
+            detector_json["static_name"], json.dumps(detector_json["config"])
+        )
+        ids.append(detector.id)
+    return get_random_int_excluding(get_settings().max_id_generator, ids)
 
 
 def get_api_supported_signal_detectors(client):
@@ -27,7 +54,7 @@ def get_supported_signal_detectors():
     return (
         get_supported_trivial_config_signal_detectors()
         + get_supported_ticker_based_signal_detectors()
-        + [CrossoverSignalDetector]
+        + [CrossoverSignalDetector, GraphSignalDetector]
     )
 
 

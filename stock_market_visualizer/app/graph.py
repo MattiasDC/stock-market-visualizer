@@ -10,7 +10,7 @@ from dash import dcc
 from dash_extensions.enrich import Input, Output, State
 from plotly.subplots import make_subplots
 from stock_market.common.factory import Factory
-from stock_market.core import OHLC, Sentiment
+from stock_market.core import OHLC
 from stock_market.core.time_series import TimeSeries, make_relative
 from stock_market.ext.indicator import register_indicator_factories
 from utils.algos import all_equal
@@ -20,6 +20,7 @@ from utils.logging import get_logger
 import stock_market_visualizer.app.sme_api_helper as api
 from stock_market_visualizer.app.config import get_settings
 from stock_market_visualizer.app.interval import IntervalLayout
+from stock_market_visualizer.app.signals.common import get_sentiment_color
 
 logger = get_logger(__name__)
 
@@ -83,14 +84,6 @@ class GraphLayout:
         def get_signal_name(s):
             return s.name
 
-        def __get_color(sentiment):
-            if sentiment == Sentiment.NEUTRAL:
-                return "grey"
-            elif sentiment == Sentiment.BULLISH:
-                return "lightgreen"
-            assert sentiment == Sentiment.BEARISH
-            return "crimson"
-
         def __add_signals(figure, index, signals):
             figure.add_trace(
                 go.Scatter(
@@ -119,7 +112,7 @@ class GraphLayout:
                     mode="markers",
                     marker_symbol="triangle-down",
                     marker_size=12,
-                    marker_color=__get_color(signals[0].sentiment),
+                    marker_color=get_sentiment_color(signals[0].sentiment),
                 ),
                 col=1,
                 row=1,
@@ -228,5 +221,5 @@ class GraphLayout:
             new_engine_id = api.update_engine(engine_id, end_date, client)
             indicators = self.__get_configured_indicators(indicator_rows)
             return new_engine_id, self.__get_traces_and_layout(
-                new_engine_id, indicators
+                client, new_engine_id, indicators
             )

@@ -18,6 +18,9 @@ from stock_market_visualizer.app.signals.common import (
 from stock_market_visualizer.app.signals.crossover_signal_detector import (
     CrossoverDetectorConfigurationLayout,
 )
+from stock_market_visualizer.app.signals.graph_signal_detector import (
+    GraphDetectorConfigurationLayout,
+)
 from stock_market_visualizer.app.signals.ticker_signal_detector import (
     TickerDetectorConfigurationLayout,
 )
@@ -51,6 +54,9 @@ class SignalDetectorLayout:
         self.crossover_config_layout = CrossoverDetectorConfigurationLayout(
             engine_layout, self.signal_detector_data_layout
         )
+        self.graph_config_layout = GraphDetectorConfigurationLayout(
+            self.signal_detector_table, self.signal_detector_data_layout
+        )
 
         self.signal_edit_placeholder_id = "signal-edit-placeholder"
         self.add_button_id = "signal-add"
@@ -60,6 +66,7 @@ class SignalDetectorLayout:
         layouts = list(self.trivial_config_layouts)
         layouts.extend(self.ticker_based_config_layouts)
         layouts.append(self.crossover_config_layout)
+        layouts.append(self.graph_config_layout)
         return layouts
 
     def get_layout(self):

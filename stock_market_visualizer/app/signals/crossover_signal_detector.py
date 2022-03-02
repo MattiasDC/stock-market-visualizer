@@ -1,5 +1,4 @@
 import json
-from random import randrange
 
 import dash
 from dash import html
@@ -9,7 +8,6 @@ from stock_market.ext.signal import CrossoverSignalDetector
 from utils.logging import get_logger
 
 import stock_market_visualizer.app.sme_api_helper as api
-from stock_market_visualizer.app.config import get_settings
 from stock_market_visualizer.app.dropdown_button import DropdownButton
 from stock_market_visualizer.app.indicator import (
     ModalIndicatorCreatorLayout,
@@ -19,6 +17,7 @@ from stock_market_visualizer.app.signals.common import (
     CustomNameLayout,
     SentimentDropdownLayout,
     SignalDetectorConfigurationLayout,
+    get_random_detector_id,
 )
 from stock_market_visualizer.app.signals.ticker_signal_detector import (
     TickerDetectorHandler,
@@ -214,7 +213,7 @@ class CrossoverDetectorHandler(TickerDetectorHandler):
                 "static_name": self.name(),
                 "config": json.dumps(
                     {
-                        "id": randrange(get_settings().max_id_generator),
+                        "id": get_random_detector_id(engine_id, self.client),
                         "name": data["name"],
                         "ticker": json.dumps(data["ticker"]),
                         "responsive_indicator_getter": data["Responsive"],
