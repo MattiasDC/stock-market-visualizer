@@ -1,3 +1,5 @@
+from collections import OrderedDict
+
 import dash
 import dash_bootstrap_components as dbc
 import dash_cytoscape as cyto
@@ -132,7 +134,7 @@ class GraphDetectorHandler:
 
         @app.callback(
             Input(*self.__layout.graph.get_selected_nodes()),
-            Output(*self.__layout.add_signal_dropdown_button.get_disabled()),
+            Output(*self.__layout.add_node_type_dropdown_button.get_disabled()),
         )
         def enable_add_signal(selected_nodes):
             return selected_nodes is None or len(selected_nodes) == 0
@@ -146,9 +148,11 @@ class GraphDetectorHandler:
             data["graph"] = elements
             return data
 
-        def add_signal_callback(sentiment, key, app):
+        def add_signal_callback(node_type, key, app):
             @app.callback(
-                Input(*self.__layout.add_signal_dropdown_button.get_item_n_clicks(key)),
+                Input(
+                    *self.__layout.add_node_type_dropdown_button.get_item_n_clicks(key)
+                ),
                 State(*self.__layout.graph.get_selected_nodes()),
                 State(*self.__layout.graph.get_elements()),
                 Output(*self.__layout.graph.get_elements()),
@@ -160,18 +164,21 @@ class GraphDetectorHandler:
                 for element in elements:
                     element_data = element["data"]
                     if element_data["id"] in ids:
-                        if sentiment == Sentiment.NEUTRAL:
-                            del element_data["sentiment"]
+                        if node_type is None:
+                            del element_data["node_type"]
                             del element_data["color"]
                             element["classes"] = "transition"
-                            continue
-                        element_data["sentiment"] = sentiment.value
-                        element_data["color"] = get_sentiment_color(sentiment)
-                        element["classes"] = "signal"
+                        elif node_type == Sentiment.NEUTRAL:
+                            element["classes"] = "initial"
+                            element_data["node_type"] = "initial"
+                        else:
+                            element_data["node_type"] = node_type.value
+                            element_data["color"] = get_sentiment_color(node_type)
+                            element["classes"] = "signal"
                 return elements
 
-        for k, s in self.__layout.sentiments.items():
-            add_signal_callback(s, k, app)
+        for k, t in self.__layout.node_types.items():
+            add_signal_callback(t, k, app)
 
     def name(self):
         return self.__layout.name
@@ -209,6 +216,12 @@ class CytoGraph:
                     "selector": ".signal",
                     "style": {
                         "background-color": "data(color)",
+                    },
+                },
+                {
+                    "selector": ".initial",
+                    "style": {
+                        "background-color": "teal",
                     },
                 },
                 {
@@ -279,14 +292,11 @@ class GraphDetectorConfigurationLayout(SignalDetectorConfigurationLayout):
         self.add_node_button = Button("add-node", "Add node")
         self.add_edge_button = Button("add-edge", "Add edge")
         self.add_detector_button = Button("add-detector", "Add detector", True)
-        self.sentiments = {
-            s.value.lower().capitalize(): s for s in Sentiment if s != Sentiment.NEUTRAL
-        }
-        self.sentiments["None"] = Sentiment.NEUTRAL
-        self.add_signal_dropdown_button = DropdownButton(
-            "add-signal-dropdown-button",
-            "Signal",
-            list(self.sentiments.keys()),
+        self.node_types = self.get_node_type_map()
+        self.add_node_type_dropdown_button = DropdownButton(
+            "add-node-type-dropdown-button",
+            "node type",
+            list(self.node_types.keys()),
             True,
             style={"margin-left": 5, "bottom": 2},
         )
@@ -301,11 +311,23 @@ class GraphDetectorConfigurationLayout(SignalDetectorConfigurationLayout):
                 self.add_node_button.get_layout(),
                 self.add_edge_button.get_layout(),
                 self.add_detector_button.get_layout(),
-                self.add_signal_dropdown_button.get_layout(),
+                self.add_node_type_dropdown_button.get_layout(),
                 self.remove_button.get_layout(),
                 self.graph.get_layout(),
             ],
         )
+
+    def get_node_type_map(self):
+        node_types = OrderedDict(
+            [
+                (s.value.lower().capitalize(), s)
+                for s in Sentiment
+                if s != Sentiment.NEUTRAL
+            ]
+        )
+        node_types["Initial"] = Sentiment.NEUTRAL
+        node_types["None"] = None
+        return node_types
 
     def get_handler(self, app, client):
         return GraphDetectorHandler(app, client, self)
