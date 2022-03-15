@@ -22,19 +22,30 @@ def get_sentiment_color(sentiment):
     if sentiment == Sentiment.NEUTRAL:
         return "grey"
     elif sentiment == Sentiment.BULLISH:
-        return "lightgreen"
+        return "seagreen"
     assert sentiment == Sentiment.BEARISH
     return "crimson"
 
 
-def get_random_detector_id(engine_id, client):
-    ids = []
+def get_signal_detectors(engine_id, client):
     factory = register_signal_detector_factories(Factory())
-    for detector_json in api.get_signal_detectors(engine_id, client):
-        detector = factory.create(
+    return [
+        factory.create(
             detector_json["static_name"], json.dumps(detector_json["config"])
         )
-        ids.append(detector.id)
+        for detector_json in api.get_signal_detectors(engine_id, client)
+    ]
+
+
+def get_signal_detector(detector_id, engine_id, client):
+    for d in get_signal_detectors(engine_id, client):
+        if d.id == detector_id:
+            return d
+    return None
+
+
+def get_random_detector_id(engine_id, client):
+    ids = [d.id for d in get_signal_detectors(engine_id, client)]
     return get_random_int_excluding(get_settings().max_id_generator, ids)
 
 

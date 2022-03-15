@@ -8,7 +8,6 @@ from stock_market.ext.signal import CrossoverSignalDetector
 from utils.logging import get_logger
 
 import stock_market_visualizer.app.sme_api_helper as api
-from stock_market_visualizer.app.dropdown_button import DropdownButton
 from stock_market_visualizer.app.indicator import (
     ModalIndicatorCreatorLayout,
     get_indicators_with_identity,
@@ -23,6 +22,7 @@ from stock_market_visualizer.app.signals.ticker_signal_detector import (
     TickerDetectorHandler,
     TickerDropdownLayout,
 )
+from stock_market_visualizer.common.dropdown_button import DropdownButton
 
 logger = get_logger(__name__)
 

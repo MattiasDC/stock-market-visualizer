@@ -2,7 +2,7 @@ import dash_bootstrap_components as dbc
 from dash import dash_table, dcc
 from dash_extensions.enrich import Input, Output
 
-from stock_market_visualizer.app.dropdown_button import DropdownButton
+from stock_market_visualizer.common.dropdown_button import DropdownButton
 
 
 class CheckableTableLayout:

@@ -7,7 +7,6 @@ from dash_extensions.enrich import Input, Output, State
 from utils.logging import get_logger
 
 import stock_market_visualizer.app.sme_api_helper as api
-from stock_market_visualizer.app.checkable_table import CheckableTableLayout
 from stock_market_visualizer.app.signals.common import (
     SignalDataPlaceholderLayout,
     get_api_supported_signal_detectors,
@@ -27,6 +26,7 @@ from stock_market_visualizer.app.signals.ticker_signal_detector import (
 from stock_market_visualizer.app.signals.trivial_signal_detector import (
     TrivialSignalDetectorConfigurationLayout,
 )
+from stock_market_visualizer.common.checkable_table import CheckableTableLayout
 
 logger = get_logger(__name__)
 
