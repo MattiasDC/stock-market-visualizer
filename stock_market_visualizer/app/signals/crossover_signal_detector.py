@@ -213,7 +213,7 @@ class CrossoverDetectorHandler(TickerDetectorHandler):
                 "static_name": self.name(),
                 "config": json.dumps(
                     {
-                        "id": get_random_detector_id(engine_id, self.client),
+                        "id": get_random_detector_id(engine_id, self.client()),
                         "name": data["name"],
                         "ticker": json.dumps(data["ticker"]),
                         "responsive_indicator_getter": data["Responsive"],

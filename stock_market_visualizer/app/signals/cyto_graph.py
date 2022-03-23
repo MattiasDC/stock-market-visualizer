@@ -14,24 +14,22 @@ class CytoGraph:
             },
             stylesheet=[
                 {
-                    "selector": "node:selected",
+                    "selector": ":selected",
                     "style": {"overlay-opacity": 0.333, "overlay-color": "grey"},
                 },
                 {
                     "selector": ".signal",
                     "style": {
                         "background-color": "data(color)",
-                        "label": "data(enter_or_exit)",
-                        "text-wrap": "wrap",
-                        "text-halign": "center",
-                        "text-valign": "center",
-                        "font-size": 5,
                     },
                 },
                 {
                     "selector": ".initial",
                     "style": {
-                        "background-color": "teal",
+                        "content": "Initial",
+                        "text-halign": "center",
+                        "text-valign": "center",
+                        "font-size": 10,
                     },
                 },
                 {
@@ -49,8 +47,8 @@ class CytoGraph:
                         "font-size": 5,
                         "text-wrap": "wrap",
                         "text-rotation": "autorotate",
-                        "target-arrow-color": "data(color)",
                         "line-color": "data(color)",
+                        "target-arrow-color": "data(color)",
                     },
                 },
             ],
