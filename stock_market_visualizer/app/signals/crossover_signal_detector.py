@@ -143,11 +143,14 @@ class CrossoverDetectorHandler(TickerDetectorHandler):
                     *getter.get_dropdown_layout().get_item_n_clicks(indicator.__name__)
                 ),
                 Output(*modal.get_is_open(indicator)),
+                Output(
+                    *getter.get_dropdown_layout().get_item_n_clicks(indicator.__name__)
+                ),
             )
             def create_indicator_form(n_clicks):
                 if n_clicks == 0 or None:
-                    return False
-                return True
+                    return False, 0
+                return True, 0
 
             @self.app().callback(
                 Input(*modal.get_add_n_clicks(indicator)),

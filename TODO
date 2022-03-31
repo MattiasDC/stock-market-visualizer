@@ -1,8 +1,11 @@
 EngineProxy
 searchable indicator dropdown
-Graph signals
 Add disclaimer
 google analytics
 add adsense configuration
 cookie policy generator
 powered by dash
+Graph different green/reds for different signals
+Test graph signals with different sentiments
+Disable trace in legend --> persist to clipboard
+sync name layout with data

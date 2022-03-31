@@ -28,6 +28,8 @@ from stock_market_visualizer.app.signals.cyto_graph import CytoGraph
 from stock_market_visualizer.common.button import Button
 from stock_market_visualizer.common.dropdown_button import DropdownButton
 
+GRAY_COLOR = "#999999"
+
 
 def get_nodes(elements):
     return [e for e in elements if "connection" not in e["classes"]]
@@ -58,53 +60,68 @@ class GraphDetectorHandler:
 
         @app.callback(
             Input(*self.__layout.add_node_button.n_clicks()),
-            State(*self.__layout.graph.get_elements()),
-            Output(*self.__layout.graph.get_elements()),
+            State(*self.__layout.signal_data_placeholder_layout.get_data()),
+            Output(*self.__layout.signal_data_placeholder_layout.get_data()),
         )
-        def add_node(n_clicks, nodes):
-            if nodes is None:
-                nodes = []
-            node_ids = get_ids(nodes)
-            nodes.append(
+        def add_node(n_clicks, data):
+            if "graph" not in data:
+                data["graph"] = []
+            data["graph"].append(
                 {
                     "data": {
                         "id": get_random_int_excluding(
-                            get_settings().max_id_generator, node_ids
+                            get_settings().max_id_generator, get_ids(data["graph"])
                         ),
                         "label": "",
                     },
                     "classes": "transition_node",
                 }
             )
-            return nodes
+            return data
 
         @app.callback(
             Input(*self.__layout.remove_button.n_clicks()),
             State(*self.__layout.graph.get_selected_nodes()),
             State(*self.__layout.graph.get_selected_edges()),
-            State(*self.__layout.graph.get_elements()),
-            Output(*self.__layout.graph.get_elements()),
+            State(*self.__layout.signal_data_placeholder_layout.get_data()),
+            Output(*self.__layout.signal_data_placeholder_layout.get_data()),
         )
-        def remove(n_clicks, selected_nodes, selected_edges, elements):
+        def remove(n_clicks, selected_nodes, selected_edges, data):
             if selected_nodes is None:
                 selected_nodes = []
             if selected_edges is None:
                 selected_edges = []
 
             selected_elements = selected_nodes + selected_edges
-            ids = [node["id"] for node in selected_elements]
-            return get_elements_by_ids(ids, elements, False)
+            ids = [int(node["id"]) for node in selected_elements]
+            data["graph"] = get_elements_by_ids(ids, data.get("graph", []), False)
+            return data
+
+        def create_detector(n_clicks, selected_detector_cell, detector_rows):
+            if selected_detector_cell is None:
+                return None
+            if n_clicks is None or n_clicks == 0:
+                return None
+
+            detector_row = detector_rows[selected_detector_cell["row"]]
+            factory = register_signal_detector_factories(Factory())
+            return factory.create(detector_row["name"], detector_row["config"])
+
+        def set_detector_on_edge(edge, detector):
+            edge["data"]["detector_id"] = detector.id
+            edge["data"]["detector_name"] = detector.name + "\n\n\u2800"
 
         @app.callback(
             Input(*self.__layout.add_edge_detector_button.n_clicks()),
             State(self.__layout.signal_table.table_id, "active_cell"),
             State(self.__layout.signal_table.table_id, "derived_virtual_data"),
-            State(*self.__layout.graph.get_elements()),
+            State(*self.__layout.signal_data_placeholder_layout.get_data()),
             State(*self.__layout.graph.get_selected_nodes()),
-            Output(*self.__layout.graph.get_elements()),
+            Output(*self.__layout.signal_data_placeholder_layout.get_data()),
+            Output(*self.__layout.add_edge_detector_button.n_clicks()),
         )
         def add_detector(
-            n_clicks, selected_detector_cell, detector_rows, elements, selected_nodes
+            n_clicks, selected_detector_cell, detector_rows, data, selected_nodes
         ):
             def add_edge(selected_nodes, detector):
                 if selected_nodes is None:
@@ -118,54 +135,85 @@ class GraphDetectorHandler:
                 ):
                     return None
 
-                first_node = selected_nodes[0]["id"]
+                first_node = int(selected_nodes[0]["id"])
                 second_node = first_node
                 if nof_selected_nodes == 2:
-                    second_node = selected_nodes[1]["id"]
+                    second_node = int(selected_nodes[1]["id"])
 
-                color = "#999999"
-                for info in get_element_by_id(first_node, elements)["data"].get(
-                    "class_info", []
-                ):
+                color = GRAY_COLOR
+                for info in get_element_by_id(first_node, get_nodes(data["graph"]))[
+                    "data"
+                ].get("class_info", []):
                     if info["enter_or_exit"] == EnterOrExit.EXIT.value:
                         color = get_sentiment_color(Sentiment(info["node_type"]))
 
-                return {
+                edge = {
                     "data": {
                         "source": first_node,
                         "target": second_node,
-                        "detector_id": detector.id,
-                        "detector_name": detector.name + "\n\n\u2800",
                         "color": color,
+                        "id": get_random_int_excluding(
+                            get_settings().max_id_generator, get_ids(data["graph"])
+                        ),
                     },
                     "classes": "connection",
                 }
+                set_detector_on_edge(edge, detector)
+                return edge
 
-            if selected_detector_cell is None:
-                return dash.no_update
-
-            detector_row = detector_rows[selected_detector_cell["row"]]
-            factory = register_signal_detector_factories(Factory())
-            detector = factory.create(detector_row["name"], detector_row["config"])
+            detector = create_detector(n_clicks, selected_detector_cell, detector_rows)
+            if detector is None:
+                return dash.no_update, 0
 
             edge = add_edge(selected_nodes, detector)
             if edge is None:
-                return dash.no_update
-            elements.append(edge)
-            return elements
+                return dash.no_update, 0
+            data["graph"].append(edge)
+            return data, 0
+
+        @app.callback(
+            Input(*self.__layout.add_edge_detector_button.n_clicks()),
+            State(self.__layout.signal_table.table_id, "active_cell"),
+            State(self.__layout.signal_table.table_id, "derived_virtual_data"),
+            State(*self.__layout.signal_data_placeholder_layout.get_data()),
+            State(*self.__layout.graph.get_selected_edges()),
+            Output(*self.__layout.signal_data_placeholder_layout.get_data()),
+            Output(*self.__layout.add_edge_detector_button.n_clicks()),
+        )
+        def change_detector(
+            n_clicks, selected_detector_cell, detector_rows, data, selected_edges
+        ):
+            if selected_edges is None or len(selected_edges) == 0:
+                return dash.no_update, 0
+
+            detector = create_detector(n_clicks, selected_detector_cell, detector_rows)
+            if detector is None:
+                return dash.no_update, 0
+
+            ids = [int(node["id"]) for node in selected_edges]
+            for e in data["graph"]:
+                if e["data"]["id"] in ids:
+                    set_detector_on_edge(e, detector)
+
+            return data, 0
 
         @app.callback(
             Input(self.__layout.signal_table.table_id, "active_cell"),
             Input(*self.__layout.graph.get_selected_nodes()),
+            Input(*self.__layout.graph.get_selected_edges()),
             State(self.__layout.signal_table.table_id, "derived_virtual_data"),
             Output(*self.__layout.add_edge_detector_button.get_label()),
             Output(*self.__layout.add_edge_detector_button.get_disabled()),
         )
-        def update_detector_label(selected_detector_cell, selected_nodes, detectors):
-            disabled = (
-                selected_detector_cell is None
-                or selected_nodes is None
-                or len(selected_nodes) != 2
+        def update_detector_label(
+            selected_detector_cell, selected_nodes, selected_edges, detectors
+        ):
+            enabled = selected_detector_cell is not None and (
+                (
+                    selected_nodes is not None
+                    and (len(selected_nodes) == 2 or len(selected_nodes) == 1)
+                )
+                or (selected_edges is not None)
             )
             selected_detector = "(selected detector)"
             if selected_detector_cell is not None:
@@ -174,7 +222,7 @@ class GraphDetectorHandler:
                 ]
             return (
                 "Add " + selected_detector + " edge",
-                disabled,
+                not enabled,
             )
 
         @app.callback(
@@ -185,13 +233,11 @@ class GraphDetectorHandler:
             return selected_nodes is None or len(selected_nodes) == 0
 
         @app.callback(
-            Input(*self.__layout.graph.get_elements()),
-            State(*self.__layout.signal_data_placeholder_layout.get_data()),
-            Output(*self.__layout.signal_data_placeholder_layout.get_data()),
+            Input(*self.__layout.signal_data_placeholder_layout.get_data()),
+            Output(*self.__layout.graph.get_elements()),
         )
-        def sync_graph_data(elements, data):
-            data["graph"] = elements
-            return data
+        def sync_graph_data(data):
+            return data.get("graph", [])
 
         @app.callback(
             Input(*self.__layout.custom_name_layout.get_name()),
@@ -208,16 +254,17 @@ class GraphDetectorHandler:
                     *self.__layout.add_node_type_dropdown_button.get_item_n_clicks(key)
                 ),
                 State(*self.__layout.graph.get_selected_nodes()),
-                State(*self.__layout.graph.get_elements()),
-                Output(*self.__layout.graph.get_elements()),
+                State(*self.__layout.signal_data_placeholder_layout.get_data()),
+                Output(*self.__layout.signal_data_placeholder_layout.get_data()),
             )
-            def add_signal(n_clicks, selected_nodes, elements):
+            def add_signal(n_clicks, selected_nodes, data):
                 if n_clicks is None or n_clicks == 0:
                     return dash.no_update
-                ids = [node["id"] for node in selected_nodes]
+                elements = data["graph"]
+                ids = [int(node["id"]) for node in selected_nodes]
                 for element in get_elements_by_ids(ids, get_nodes(elements)):
-                    element = node_changer(element, elements)
-                return elements
+                    elements = node_changer(element, elements)
+                return data
 
         for k, node_changer in self.__layout.node_types.items():
             add_signal_callback(node_changer, k, app)
@@ -228,13 +275,14 @@ class GraphDetectorHandler:
     def id(self):
         return self.name().replace(" ", "")
 
-    def activate(self, engine_id):
-        return engine_id
+    def activate(self, engine_id, data):
+        data["graph"] = []
+        return engine_id, data
 
     def create(self, engine_id, data):
         def process_node(node, builder):
             node_data = node["data"]
-            identifier = node_data["id"]
+            identifier = str(node_data["id"])
             builder = builder.add_state(identifier)
             if "initial" in node.get("classes", []):
                 builder = builder.set_initial_state(identifier)
@@ -256,7 +304,7 @@ class GraphDetectorHandler:
             if detector not in builder.detectors:
                 builder = builder.add_detector(detector)
             builder = builder.add_transition(
-                edge["source"], edge["target"], detector_id
+                str(edge["source"]), str(edge["target"]), detector_id
             )
             return builder
 
@@ -292,7 +340,6 @@ class GraphDetectorHandler:
             },
             self.__client,
         )
-
         if new_engine_id is None:
             return engine_id
         return new_engine_id
@@ -370,7 +417,9 @@ class GraphDetectorConfigurationLayout(SignalDetectorConfigurationLayout):
             else:
                 if "color" not in data:
                     data["color"] = "#5DADE2"
-                for e in get_edges(elements):
+                for e in elements:
+                    if "connection" not in e["classes"]:
+                        continue
                     if e["data"]["source"] == data["id"]:
                         e["data"]["color"] = get_sentiment_color(signal_type)
 
@@ -378,14 +427,14 @@ class GraphDetectorConfigurationLayout(SignalDetectorConfigurationLayout):
                 element = remove_class(element, "transition_node")
                 element = add_class(element, "signal")
 
-            return element
+            return elements
 
         def set_initial_node(element, elements):
             for e in elements:
                 if "initial" in e["classes"]:
                     e = remove_class(e, "initial")
             element = add_class(element, "initial")
-            return element
+            return elements
 
         def remove_node_type(element, elements):
             data = element["data"]
@@ -396,9 +445,9 @@ class GraphDetectorConfigurationLayout(SignalDetectorConfigurationLayout):
             for e in get_edges(elements):
                 edge_data = e["data"]
                 if edge_data["source"] == data["id"] and "color" in edge_data:
-                    edge_data["color"] = "#999999"
+                    edge_data["color"] = GRAY_COLOR
             element["classes"] = "transition_node"
-            return element
+            return elements
 
         node_types = OrderedDict(
             [

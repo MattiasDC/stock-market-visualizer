@@ -78,8 +78,8 @@ class TickerDetectorHandler:
         tickers = api.get_tickers(engine_id, self.__client)
         return [{"label": t, "value": t} for t in tickers]
 
-    def activate(self, engine_id):
-        return engine_id
+    def activate(self, engine_id, data):
+        return engine_id, data
 
     def create(self, engine_id, data):
         new_engine_id = api.add_signal_detector(

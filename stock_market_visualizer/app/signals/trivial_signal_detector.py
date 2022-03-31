@@ -16,9 +16,9 @@ class EmptyDetectorHandler:
     def id(self):
         return self.name().replace(" ", "")
 
-    def activate(self, engine_id):
+    def activate(self, engine_id, data):
         if engine_id is None:
-            return None
+            return None, data
         new_engine_id = api.add_signal_detector(
             engine_id,
             {
@@ -28,8 +28,8 @@ class EmptyDetectorHandler:
             self.__client,
         )
         if new_engine_id is None:
-            return engine_id
-        return new_engine_id
+            return engine_id, data
+        return new_engine_id, data
 
     def get_id(self, config):
         return config

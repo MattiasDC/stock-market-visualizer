@@ -84,6 +84,9 @@ class GraphLayout:
         def get_signal_name(s):
             return s.name
 
+        def get_signal_sentiment(s):
+            return s.sentiment
+
         def __add_signals(figure, index, signals):
             figure.add_trace(
                 go.Scatter(
@@ -99,24 +102,29 @@ class GraphLayout:
 
         def __add_ticker_signals(figure, signals, ticker_closes):
             ticker_close = ticker_closes[signals[0].tickers[0].symbol]
-            figure.add_trace(
-                go.Scatter(
-                    name=signals[0].name,
-                    x=[s.date for s in signals],
-                    y=[
-                        ticker_close.time_values[
-                            ticker_close.time_values.date == s.date
-                        ].value.iloc[0]
-                        for s in signals
-                    ],
-                    mode="markers",
-                    marker_symbol="triangle-down",
-                    marker_size=12,
-                    marker_color=get_sentiment_color(signals[0].sentiment),
-                ),
-                col=1,
-                row=1,
-            )
+            grouped_signals = groupby(signals, key=get_signal_sentiment)
+            for g, sentiment_signals_iter in grouped_signals:
+                sentiment_signals = list(sentiment_signals_iter)
+                figure.add_trace(
+                    go.Scatter(
+                        name=sentiment_signals[0].name,
+                        x=[s.date for s in sentiment_signals],
+                        y=[
+                            ticker_close.time_values[
+                                ticker_close.time_values.date == s.date
+                            ].value.iloc[0]
+                            for s in sentiment_signals
+                        ],
+                        mode="markers",
+                        marker_symbol="triangle-down",
+                        marker_size=12,
+                        marker_color=get_sentiment_color(
+                            sentiment_signals[0].sentiment
+                        ),
+                    ),
+                    col=1,
+                    row=1,
+                )
             return figure
 
         all_signals = sorted(

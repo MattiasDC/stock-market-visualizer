@@ -153,6 +153,7 @@ class SignalDetectorLayout:
                 Output(*self.engine_layout.get_id()),
                 Output(self.signal_edit_fieldset_id, "children"),
                 Output(self.signal_edit_placeholder_id, "hidden"),
+                Output(*self.signal_detector_data_layout.get_data()),
                 Input(
                     *self.signal_detector_table.get_dropdown().get_item_n_clicks(
                         handler.id()
@@ -160,11 +161,17 @@ class SignalDetectorLayout:
                 ),
                 State(self.signal_edit_fieldset_id, "children"),
                 State(*self.engine_layout.get_id()),
+                State(*self.signal_detector_data_layout.get_data()),
             )
-            def add_signal_detector(clicks, fieldset_children, engine_id):
+            def add_signal_detector(clicks, fieldset_children, engine_id, data):
                 if clicks == 0:
-                    return (dash.no_update, dash.no_update, dash.no_update)
-                engine_id = handler.activate(engine_id)
+                    return (
+                        dash.no_update,
+                        dash.no_update,
+                        dash.no_update,
+                        dash.no_update,
+                    )
+                engine_id, data = handler.activate(engine_id, data)
 
                 hide_fieldset = False
                 for child in fieldset_children:
@@ -182,7 +189,7 @@ class SignalDetectorLayout:
                         else:
                             hide_fieldset = True
 
-                return (engine_id, fieldset_children, hide_fieldset)
+                return (engine_id, fieldset_children, hide_fieldset, data)
 
         @app.callback(
             Output(*self.engine_layout.get_id()),
