@@ -27,6 +27,15 @@ def get_sentiment_color(sentiment):
     return "crimson"
 
 
+def get_sentiment_shape(sentiment):
+    if sentiment == Sentiment.NEUTRAL:
+        return "circle"
+    elif sentiment == Sentiment.BULLISH:
+        return "triangle-up"
+    assert sentiment == Sentiment.BEARISH
+    return "triangle-down"
+
+
 def get_signal_detectors(engine_id, client):
     factory = register_signal_detector_factories(Factory())
     return [

@@ -13,14 +13,14 @@ from stock_market.common.factory import Factory
 from stock_market.core import OHLC
 from stock_market.core.time_series import TimeSeries, make_relative
 from stock_market.ext.indicator import register_indicator_factories
-from utils.algos import all_equal
+from utils.algos import all_equal, split_elements
 from utils.dateutils import from_sdate
 from utils.logging import get_logger
 
 import stock_market_visualizer.app.sme_api_helper as api
 from stock_market_visualizer.app.config import get_settings
 from stock_market_visualizer.app.interval import IntervalLayout
-from stock_market_visualizer.app.signals.common import get_sentiment_color
+from stock_market_visualizer.app.signals.common import get_sentiment_shape
 
 logger = get_logger(__name__)
 
@@ -88,26 +88,46 @@ class GraphLayout:
             return s.sentiment
 
         def __add_signals(figure, index, signals):
-            figure.add_trace(
-                go.Scatter(
-                    name=signals[0].name,
-                    x=[s.date for s in signals],
-                    y=[index] * len(signals),
-                    mode="markers",
-                ),
-                col=1,
-                row=2,
+            grouped_signals = groupby(
+                split_elements(signals, key=get_signal_sentiment),
+                key=get_signal_sentiment,
             )
+            groups = [
+                list(sentiment_signals_iter)
+                for _, sentiment_signals_iter in grouped_signals
+            ]
+            for sentiment_signals in groups:
+                first = sentiment_signals[0]
+                figure.add_trace(
+                    go.Scatter(
+                        name=first.name
+                        + ("" if len(groups) == 1 else f" ({first.sentiment.value})"),
+                        x=[s.date for s in sentiment_signals],
+                        y=[index] * len(sentiment_signals),
+                        mode="markers",
+                        marker_symbol=get_sentiment_shape(first.sentiment),
+                    ),
+                    col=1,
+                    row=2,
+                )
             return figure
 
         def __add_ticker_signals(figure, signals, ticker_closes):
             ticker_close = ticker_closes[signals[0].tickers[0].symbol]
-            grouped_signals = groupby(signals, key=get_signal_sentiment)
-            for g, sentiment_signals_iter in grouped_signals:
-                sentiment_signals = list(sentiment_signals_iter)
+            grouped_signals = groupby(
+                split_elements(signals, key=get_signal_sentiment),
+                key=get_signal_sentiment,
+            )
+            groups = [
+                list(sentiment_signals_iter)
+                for _, sentiment_signals_iter in grouped_signals
+            ]
+            for sentiment_signals in groups:
+                first = sentiment_signals[0]
                 figure.add_trace(
                     go.Scatter(
-                        name=sentiment_signals[0].name,
+                        name=first.name
+                        + ("" if len(groups) == 1 else f" ({first.sentiment.value})"),
                         x=[s.date for s in sentiment_signals],
                         y=[
                             ticker_close.time_values[
@@ -116,11 +136,8 @@ class GraphLayout:
                             for s in sentiment_signals
                         ],
                         mode="markers",
-                        marker_symbol="triangle-down",
+                        marker_symbol=get_sentiment_shape(first.sentiment),
                         marker_size=12,
-                        marker_color=get_sentiment_color(
-                            sentiment_signals[0].sentiment
-                        ),
                     ),
                     col=1,
                     row=1,
