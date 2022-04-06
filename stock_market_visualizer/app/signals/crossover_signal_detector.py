@@ -122,7 +122,7 @@ class CrossoverDetectorHandler(TickerDetectorHandler):
             Output(*crossover_layout.signal_data_placeholder_layout.get_data()),
         )
         def update_custom_name(custom_name, data):
-            data["name"] = custom_name
+            data["crossover_name"] = custom_name
             return data
 
         @app.callback(
@@ -200,7 +200,7 @@ class CrossoverDetectorHandler(TickerDetectorHandler):
                 return data, str(created_indicator)
 
     def create(self, engine_id, data):
-        if "name" not in data:
+        if "crossover_name" not in data:
             return engine_id
         if "Responsive" not in data:
             return engine_id
@@ -217,7 +217,7 @@ class CrossoverDetectorHandler(TickerDetectorHandler):
                 "config": json.dumps(
                     {
                         "id": get_random_detector_id(engine_id, self.client()),
-                        "name": data["name"],
+                        "name": data["crossover_name"],
                         "ticker": json.dumps(data["ticker"]),
                         "responsive_indicator_getter": data["Responsive"],
                         "unresponsive_indicator_getter": data["Unresponsive"],

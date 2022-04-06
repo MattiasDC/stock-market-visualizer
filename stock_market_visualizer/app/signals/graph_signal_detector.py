@@ -245,7 +245,7 @@ class GraphDetectorHandler:
             Output(*self.__layout.signal_data_placeholder_layout.get_data()),
         )
         def update_custom_name(custom_name, data):
-            data["name"] = custom_name
+            data["signal_name"] = custom_name
             return data
 
         def add_signal_callback(node_changer, key, app):
@@ -316,9 +316,9 @@ class GraphDetectorHandler:
             get_random_detector_id(engine_id, self.__client)
         )
 
-        if "name" not in data or data["name"] is None:
+        if "signal_name" not in data or data["signal_name"] is None:
             return engine_id
-        builder = builder.set_name(data["name"])
+        builder = builder.set_name(data["signal_name"])
 
         # first add all states
         for n in get_nodes(elements):

@@ -164,14 +164,20 @@ def update_engine(engine_id, date, client):
     if engine_id is None:
         return None
 
-    return client.post(url=get_update_url(engine_id), params={"date": str(date)}).json()
+    response = client.post(url=get_update_url(engine_id), params={"date": str(date)})
+    if response.status_code != HTTPStatus.OK:
+        return None
+    return response.json()
 
 
 @lru_cache(maxsize=MAX_CACHE_SIZE)
 def get_tickers(engine_id, client):
     if engine_id is None:
         return []
-    return client.get(url=get_tickers_url(engine_id)).json()
+    response = client.get(url=get_tickers_url(engine_id))
+    if response.status_code != HTTPStatus.OK:
+        return []
+    return response.json()
 
 
 @lru_cache(maxsize=MAX_CACHE_SIZE)
@@ -180,7 +186,7 @@ def get_ticker_ohlc(engine_id, ticker, client):
         return None
 
     response = client.get(url=get_ticker_ohlc_url(engine_id, ticker))
-    if response.status_code == HTTPStatus.NO_CONTENT:
+    if response.status_code != HTTPStatus.OK:
         return None
     return response.json()
 
@@ -218,7 +224,10 @@ def get_signal_detectors(engine_id, client):
     if engine_id is None:
         return []
 
-    return client.get(url=get_signal_detectors_url(engine_id)).json()
+    response = client.get(url=get_signal_detectors_url(engine_id))
+    if response.status_code != HTTPStatus.OK:
+        return []
+    return response.json()
 
 
 def add_signal_detector(engine_id, signal_detector, client):
@@ -250,7 +259,10 @@ def remove_signal_detector(engine_id, signal_detector_id, client):
 def get_signals(engine_id, client):
     if engine_id is None:
         return SignalSequence()
-    return SignalSequence.from_json(client.get(url=get_signals_url(engine_id)).json())
+    response = client.get(url=get_signals_url(engine_id))
+    if response.status_code != HTTPStatus.OK:
+        return SignalSequence()
+    return SignalSequence.from_json(response.json())
 
 
 @lru_cache(maxsize=MAX_CACHE_SIZE)

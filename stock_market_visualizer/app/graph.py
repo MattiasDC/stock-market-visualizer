@@ -113,7 +113,8 @@ class GraphLayout:
             return figure
 
         def __add_ticker_signals(figure, signals, ticker_closes):
-            ticker_close = ticker_closes[signals[0].tickers[0].symbol]
+            ticker_symbol = signals[0].tickers[0].symbol
+            ticker_close = ticker_closes[ticker_symbol]
             grouped_signals = groupby(
                 split_elements(signals, key=get_signal_sentiment),
                 key=get_signal_sentiment,
@@ -127,6 +128,7 @@ class GraphLayout:
                 figure.add_trace(
                     go.Scatter(
                         name=first.name
+                        + f" ({ticker_symbol})"
                         + ("" if len(groups) == 1 else f" ({first.sentiment.value})"),
                         x=[s.date for s in sentiment_signals],
                         y=[
