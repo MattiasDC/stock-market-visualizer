@@ -34,7 +34,7 @@ class GraphLayout:
         self.layout = dbc.Col(
             dbc.Container(
                 [
-                    dcc.Graph(id=self.stock_market_graph),
+                    dcc.Graph(id=self.stock_market_graph, style={"height": "60vh"}),
                     self.interval_layout.get_layout(),
                 ]
             )
@@ -204,6 +204,7 @@ class GraphLayout:
         figure = make_subplots(
             rows=2, cols=1, shared_xaxes=share_x_axes, row_heights=[0.9, 0.1]
         )
+        figure["layout"].update(margin=dict(l=0, r=0, b=0, t=0))
 
         ticker_closes = self.__get_ticker_closes(client, engine_id)
         figure, nof_ticker_lines = self.__get_traces(ticker_closes, indicators, figure)
