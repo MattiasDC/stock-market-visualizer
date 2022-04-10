@@ -111,8 +111,11 @@ class TickerLayout:
             State(*self.get_ticker_table()),
         )
         def add_ticker(n_clicks, n_submit, ticker_symbol, engine_id, rows):
-            ticker_symbol = str.upper(ticker_symbol.rstrip())
             no_update = (dash.no_update, dash.no_update)
+            if ticker_symbol is None:
+                return no_update
+
+            ticker_symbol = str.upper(ticker_symbol.rstrip())
             if ticker_symbol in self.get_tickers(rows) or not ticker_symbol:
                 return no_update
 

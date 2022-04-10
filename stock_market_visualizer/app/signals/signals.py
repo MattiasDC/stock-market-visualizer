@@ -142,7 +142,7 @@ class SignalDetectorLayout:
         )
         def add_signal_detector(n_clicks, engine_id, handler_name, data):
             if n_clicks == 0:
-                return dash.no_update, dash.no_update, dash.no_update
+                return dash.no_update, dash.no_update
             handler = detector_handlers[handler_name]
             new_engine_id = handler.create(engine_id, data)
 

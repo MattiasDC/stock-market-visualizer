@@ -1,3 +1,4 @@
+import dash
 import dash_bootstrap_components as dbc
 from dash import html
 from dash_extensions.enrich import Input, Output, State
@@ -175,6 +176,9 @@ class IndicatorLayout:
                 ticker_rows,
                 arguments,
             ):
+                if not indicator_rows or not ticker_cell or not ticker_rows:
+                    return dash.no_update, dash.no_update
+
                 if not isinstance(arguments, list):
                     arguments = [arguments]
 
