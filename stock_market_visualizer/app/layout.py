@@ -1,7 +1,7 @@
 import dash_bootstrap_components as dbc
 
-from stock_market_visualizer.app.cookie_policy import CookiePolicyLayout
 from stock_market_visualizer.app.date import DateLayout
+from stock_market_visualizer.app.disclaimer import DisclaimerLayout
 from stock_market_visualizer.app.engine import EngineLayout
 from stock_market_visualizer.app.graph import GraphLayout
 from stock_market_visualizer.app.header import HeaderLayout
@@ -22,7 +22,7 @@ class Layout:
             self.engine_layout, self.ticker_layout, self.signal_detector_layout
         )
         self.graph_layout = GraphLayout(self.engine_layout, self.date_layout)
-        self.cookie_policy_layout = CookiePolicyLayout()
+        self.disclaimer_layout = DisclaimerLayout()
         self.restoreable_state_layout = RestoreableStateLayout()
 
         self.layout = dbc.Container(
@@ -43,7 +43,7 @@ class Layout:
                     ]
                 ),
                 self.engine_layout.get_layout(),
-                self.cookie_policy_layout.get_layout(),
+                self.disclaimer_layout.get_layout(),
             ]
         )
 
@@ -54,7 +54,7 @@ class Layout:
         return self.layout
 
     def register_callbacks(self, app, client_getter, redis_getter):
-        self.cookie_policy_layout.register_callbacks(app)
+        self.disclaimer_layout.register_callbacks(app)
         self.header_layout.register_callbacks(app)
         self.date_layout.register_callbacks(app, client_getter)
         self.graph_layout.register_callbacks(app, client_getter)
