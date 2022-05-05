@@ -15,7 +15,7 @@ services:
       - DEBUG=True
       - MAX_TICKER_SYMBOL_LENGTH=10
       - REDIS_DB=0
-      - DASH_DEBUG=True
+      - PORT=8000
     volumes:
       - .:/app
 
@@ -34,7 +34,7 @@ services:
     ports:
       - 8001:8001
     environment:
-      - REDIS_DB=0
+      - REDIS_DB=1
       - MAX_TICKER_SYMBOL_LENGTH=10
     depends_on:
       - redis

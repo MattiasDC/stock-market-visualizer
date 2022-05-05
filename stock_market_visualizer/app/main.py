@@ -9,43 +9,36 @@ from stock_market_visualizer.app.redis_helper import init_redis_pool
 from stock_market_visualizer.common.requests import ClientSessionGenerator
 
 layout = Layout()
-
-app = DashProxy(
+dash_app = DashProxy(
     __name__,
-    requests_pathname_prefix="/sme/",
     prevent_initial_callbacks=True,
     transforms=[MultiplexerTransform()],
     meta_tags=[{"name": "viewport", "content": "width=device-width, initial-scale=1"}],
     external_stylesheets=layout.get_themes(),
     assets_folder="./assets",
 )
-app.title = "Stock Market Engine"
+dash_app.title = "Stock Market Engine"
 
-server = FastAPI()
-server.mount("/sme", WSGIMiddleware(app.server))
-
-
-def get_client_generator():
-    return server.state.client_generator.get()
+app = FastAPI()
+app.mount("/", WSGIMiddleware(dash_app.server))
 
 
-def get_redis():
-    return server.state.redis
-
-
-@server.on_event("startup")
+@app.on_event("startup")
 async def startup_event():
-    server.state.client_generator = ClientSessionGenerator()
-    server.state.redis = init_redis_pool()
-    app.layout = layout.get_layout()
-    layout.register_callbacks(app, get_client_generator, get_redis)
+    app.state.client_generator = ClientSessionGenerator()
+    app.state.redis = init_redis_pool()
+    dash_app.layout = layout.get_layout()
+    layout.register_callbacks(
+        dash_app, app.state.client_generator.get, lambda: app.state.redis
+    )
 
 
 if __name__ == "__main__":
     settings = get_settings()
-    app.enable_dev_tools(debug=True, dev_tools_hot_reload=True)
+    if settings.debug:
+        dash_app.enable_dev_tools(debug=True, dev_tools_hot_reload=True)
     uvicorn.run(
-        "main:server",
+        "main:app",
         host=settings.host_url,
         port=settings.port,
         ssl_keyfile=settings.ssl_keyfile,

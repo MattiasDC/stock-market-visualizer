@@ -4,10 +4,9 @@ import uuid
 import dash
 from dash import dcc
 from dash_extensions.enrich import Input, Output, State
+from httpx import URL
 
 from stock_market_visualizer.app.config import get_settings
-
-FIXED_PATH = "/sme/"
 
 
 class RestoreableStateLayout:
@@ -29,11 +28,10 @@ class RestoreableStateLayout:
     def register_callbacks(self, app, redis_getter):
         @app.callback(Output(*self.get_restoreable_state()), Input(*self.get_url()))
         def update_state_from_url(url):
-            url_splitted = url.split(FIXED_PATH, 1)
-            state_id = url_splitted[1]
-            if len(state_id) == 0:
+            url_splitted = URL(url).path[1:]
+            if len(url_splitted) == 0:
                 return dash.no_update
-            return state_id
+            return url_splitted
 
         @app.callback(
             Output("header-title", "value"),
@@ -95,7 +93,7 @@ class RestoreableStateLayout:
         ):
             if n_clicks == 0:
                 return dash.no_update
-            url = url.split(FIXED_PATH, 1)[0]
+            url = URL(url)
             state = {}
             state["header-title"] = header_title
             state["engine-id"] = engine_id
@@ -114,4 +112,4 @@ class RestoreableStateLayout:
                 get_settings().redis_restoreable_state_expiration_time,
             )
 
-            return url + FIXED_PATH + state_id
+            return f"{url}{state_id}"
