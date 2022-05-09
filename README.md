@@ -4,7 +4,7 @@ stock-market-visualizer is a [Dash](https://dash.plotly.com/) application that c
 
 ## Installation
 
-Use [docker](https://www.docker.com/) to install docker and then build stock-market-engine.
+Use [docker](https://www.docker.com/) to install docker and then build stock-market-visualizer.
 
 ```bash
 git clone https://bitbucket.org/MattiasDC/stock-market-visualizer.git
@@ -14,7 +14,7 @@ docker-compose -f docker-compose-dev.yml build
 docker-compose -f docker-compose-dev.yml up
 ```
 
-Open a web browser at 0.0.0.0:/sme and have fun!
+Open a web browser at https://0.0.0.0:8000 and have fun!
 
 ## Contributing
 Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.

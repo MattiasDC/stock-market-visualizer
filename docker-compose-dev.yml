@@ -16,6 +16,8 @@ services:
       - MAX_TICKER_SYMBOL_LENGTH=10
       - REDIS_DB=0
       - PORT=8000
+      - SSL_KEYFILE=0.0.0.0-key.pem
+      - SSL_CERTFILE=0.0.0.0.pem
     volumes:
       - .:/app
 

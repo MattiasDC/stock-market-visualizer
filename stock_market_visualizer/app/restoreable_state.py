@@ -28,10 +28,10 @@ class RestoreableStateLayout:
     def register_callbacks(self, app, redis_getter):
         @app.callback(Output(*self.get_restoreable_state()), Input(*self.get_url()))
         def update_state_from_url(url):
-            url_splitted = URL(url).path[1:]
-            if len(url_splitted) == 0:
+            url_splitted = URL(url).path.split("/engine/")
+            if len(url_splitted) < 2:
                 return dash.no_update
-            return url_splitted
+            return url_splitted[1]
 
         @app.callback(
             Output("header-title", "value"),
@@ -112,4 +112,4 @@ class RestoreableStateLayout:
                 get_settings().redis_restoreable_state_expiration_time,
             )
 
-            return f"{url}{state_id}"
+            return f"{url}engine/{state_id}"
