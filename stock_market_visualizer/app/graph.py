@@ -1,42 +1,29 @@
-import datetime as dt
 from collections import defaultdict
 from itertools import groupby
 
-import dash
 import dash_bootstrap_components as dbc
 import pandas as pd
 import plotly.graph_objects as go
 from dash import dcc
-from dash_extensions.enrich import Input, Output, State
+from dash_extensions.enrich import Input, Output
 from plotly.subplots import make_subplots
 from stock_market.common.factory import Factory
 from stock_market.core import OHLC
 from stock_market.core.time_series import TimeSeries, make_relative
 from stock_market.ext.indicator import register_indicator_factories
 from utils.algos import all_equal, split_elements
-from utils.dateutils import from_sdate
-from utils.logging import get_logger
 
 import stock_market_visualizer.app.sme_api_helper as api
-from stock_market_visualizer.app.config import get_settings
-from stock_market_visualizer.app.interval import IntervalLayout
 from stock_market_visualizer.app.signals.common import get_sentiment_shape
-
-logger = get_logger(__name__)
 
 
 class GraphLayout:
-    def __init__(self, engine_layout, date_layout):
+    def __init__(self, engine_layout):
         self.engine_layout = engine_layout
-        self.date_layout = date_layout
-        self.interval_layout = IntervalLayout()
         self.stock_market_graph = "stock-market-graph"
         self.layout = dbc.Col(
             dbc.Container(
-                [
-                    dcc.Graph(id=self.stock_market_graph, style={"height": "60vh"}),
-                    self.interval_layout.get_layout(),
-                ]
+                dcc.Graph(id=self.stock_market_graph, style={"height": "60vh"})
             )
         )
 
@@ -226,28 +213,3 @@ class GraphLayout:
         def change(rows, engine_id):
             indicators = self.__get_configured_indicators(rows)
             return self.__get_traces_and_layout(client, engine_id, indicators)
-
-        @app.callback(
-            Output(*self.engine_layout.get_id()),
-            Output(*self.get_graph()),
-            Input(*self.interval_layout.get_interval()),
-            State(*self.date_layout.get_end_date()),
-            State(*self.engine_layout.get_id()),
-            State("indicator-table", "data"),
-        )
-        def update_on_interval(n_intervals, end_date, engine_id, indicator_rows):
-            end_date = from_sdate(end_date)
-            now = dt.datetime.now()
-            # We still want to update on interval if we just crossed a day
-            if end_date is None or now - dt.datetime.combine(
-                end_date, dt.time()
-            ) > dt.timedelta(days=1, minutes=1, seconds=get_settings().update_interval):
-                return dash.no_update
-
-            logger.info("Interval callback triggered: updating engine")
-            client = client_getter()
-            new_engine_id = api.update_engine(engine_id, end_date, client)
-            indicators = self.__get_configured_indicators(indicator_rows)
-            return new_engine_id, self.__get_traces_and_layout(
-                client, new_engine_id, indicators
-            )

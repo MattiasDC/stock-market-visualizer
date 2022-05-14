@@ -6,6 +6,7 @@ from stock_market_visualizer.app.engine import EngineLayout
 from stock_market_visualizer.app.graph import GraphLayout
 from stock_market_visualizer.app.header import HeaderLayout
 from stock_market_visualizer.app.indicator import IndicatorLayout
+from stock_market_visualizer.app.interval import IntervalLayout
 from stock_market_visualizer.app.restoreable_state import RestoreableStateLayout
 from stock_market_visualizer.app.signals import SignalDetectorLayout
 from stock_market_visualizer.app.ticker import TickerLayout
@@ -21,9 +22,10 @@ class Layout:
         self.date_layout = DateLayout(
             self.engine_layout, self.ticker_layout, self.signal_detector_layout
         )
-        self.graph_layout = GraphLayout(self.engine_layout, self.date_layout)
+        self.graph_layout = GraphLayout(self.engine_layout)
         self.disclaimer_layout = DisclaimerLayout()
         self.restoreable_state_layout = RestoreableStateLayout()
+        self.interval_layout = IntervalLayout(self.engine_layout, self.date_layout)
 
         self.layout = dbc.Container(
             children=self.restoreable_state_layout.get_layout()
@@ -44,6 +46,7 @@ class Layout:
                 ),
                 self.engine_layout.get_layout(),
                 self.disclaimer_layout.get_layout(),
+                self.interval_layout.get_layout(),
             ]
         )
 
@@ -60,5 +63,6 @@ class Layout:
         self.graph_layout.register_callbacks(app, client_getter)
         self.ticker_layout.register_callbacks(app, client_getter)
         self.indicator_layout.register_callbacks(app, client_getter)
+        self.interval_layout.register_callbacks(app, client_getter)
         self.signal_detector_layout.register_callbacks(app, client_getter)
         self.restoreable_state_layout.register_callbacks(app, redis_getter)
