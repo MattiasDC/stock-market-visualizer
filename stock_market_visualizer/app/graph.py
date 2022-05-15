@@ -1,3 +1,4 @@
+import datetime as dt
 from collections import defaultdict
 from itertools import groupby
 
@@ -46,11 +47,17 @@ class GraphLayout:
         self, indicators_per_ticker, ticker, ticker_values, figure
     ):
         for indicator in indicators_per_ticker[ticker]:
+            trimmed_ticker_values = ticker_values.start_at(
+                ticker_values.start + dt.timedelta(days=indicator.lag_days())
+            )
             for indicator_values in [
                 indicator(
                     TimeSeries(
                         ticker,
-                        pd.concat([ticker_values.dates, ticker_values.values], axis=1),
+                        pd.concat(
+                            [trimmed_ticker_values.dates, trimmed_ticker_values.values],
+                            axis=1,
+                        ),
                     )
                 )
             ]:

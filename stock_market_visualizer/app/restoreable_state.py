@@ -111,5 +111,6 @@ class RestoreableStateLayout:
                 json.dumps(state),
                 get_settings().redis_restoreable_state_expiration_time,
             )
-
-            return f"{url}engine/{state_id}"
+            splitted_url = str(url).split("engine/")
+            assert 0 < len(splitted_url) <= 2
+            return f"{splitted_url[0]}engine/{state_id}"
