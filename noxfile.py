@@ -3,6 +3,7 @@ import os
 import nox
 
 FIX = os.getenv("FIX", "0") == "1"
+REUSE_VENV = os.getenv("REUSE_VENV", "0") == "1"
 
 
 def __black_cmd():
@@ -27,7 +28,7 @@ def __yamllint_cmd():
     return ["yamllint", "."]
 
 
-@nox.session(python="3.9")
+@nox.session(python="3.9", reuse_venv=REUSE_VENV)
 def lint(session):
     session.install(".[dev]")
     session.run(*__black_cmd())
