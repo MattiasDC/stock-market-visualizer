@@ -19,7 +19,7 @@ dash_app = DashProxy(
 )
 dash_app.title = "Stock Market Engine"
 
-app = FastAPI()
+app = FastAPI(title="Stock Market Visualizer")
 app.mount("/", WSGIMiddleware(dash_app.server))
 
 
