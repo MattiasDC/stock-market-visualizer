@@ -176,9 +176,8 @@ class IndicatorLayout:
                 ticker_rows,
                 arguments,
             ):
-                if not indicator_rows or not ticker_cell or not ticker_rows:
+                if indicator_rows is None or not ticker_cell or not ticker_rows:
                     return dash.no_update, dash.no_update
-
                 if not isinstance(arguments, list):
                     arguments = [arguments]
 
