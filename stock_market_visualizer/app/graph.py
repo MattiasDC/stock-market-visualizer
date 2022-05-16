@@ -1,4 +1,3 @@
-import datetime as dt
 from collections import defaultdict
 from itertools import groupby
 
@@ -7,6 +6,7 @@ import pandas as pd
 import plotly.graph_objects as go
 from dash import dcc
 from dash_extensions.enrich import Input, Output
+from dateutil.rrule import DAILY, FR, MO, TH, TU, WE, rrule
 from plotly.subplots import make_subplots
 from stock_market.common.factory import Factory
 from stock_market.core import OHLC
@@ -47,25 +47,29 @@ class GraphLayout:
         self, indicators_per_ticker, ticker, ticker_values, figure
     ):
         for indicator in indicators_per_ticker[ticker]:
-            trimmed_ticker_values = ticker_values.start_at(
-                ticker_values.start + dt.timedelta(days=indicator.lag_days())
-            )
             for indicator_values in [
                 indicator(
                     TimeSeries(
                         ticker,
                         pd.concat(
-                            [trimmed_ticker_values.dates, trimmed_ticker_values.values],
+                            [ticker_values.dates, ticker_values.values],
                             axis=1,
                         ),
                     )
                 )
             ]:
+                trimmed_indicator_values = indicator_values.start_at(
+                    rrule(
+                        DAILY,
+                        dtstart=indicator_values.start,
+                        byweekday=(MO, TU, WE, TH, FR),
+                    )[indicator.lag_days()].date()
+                )
                 figure.add_trace(
                     go.Scatter(
-                        x=indicator_values.dates,
-                        y=indicator_values.values,
-                        name=indicator_values.name,
+                        x=trimmed_indicator_values.dates,
+                        y=trimmed_indicator_values.values,
+                        name=trimmed_indicator_values.name,
                         mode="lines",
                     ),
                     row=1,
