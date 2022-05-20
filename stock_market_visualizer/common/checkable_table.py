@@ -33,9 +33,9 @@ class CheckableTableLayout:
                 dcc.Checklist(
                     id=self.show_table,
                     options=[
-                        {"label": f"Show {self.name.capitalize()}s", "value": "S"}
+                        {"label": f"Show {self.name.capitalize()}s", "value": True}
                     ],
-                    value=["S"],
+                    value=[True],
                     style={"margin-top": 5},
                 ),
                 dbc.Collapse(
@@ -65,4 +65,4 @@ class CheckableTableLayout:
             Input(*self.get_show_table()), Output(self.collapse_table_id, "is_open")
         )
         def toggle_collapse_table(show_table):
-            return "S" in show_table
+            return True in show_table

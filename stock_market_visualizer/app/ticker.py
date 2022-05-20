@@ -37,8 +37,8 @@ class TickerLayout:
                 ),
                 dcc.Checklist(
                     id=self.show_ticker_table,
-                    options=[{"label": " Show Tickers", "value": "S"}],
-                    value=["S"],
+                    options=[{"label": " Show Tickers", "value": True}],
+                    value=[True],
                     style={"margin-top": 5},
                 ),
                 dbc.Collapse(
@@ -92,7 +92,7 @@ class TickerLayout:
             Output(self.collapse_ticker_table, "is_open"),
         )
         def toggle_collapse_table(show_table):
-            return "S" in show_table
+            return True in show_table
 
         @app.callback(
             Output(*self.get_ticker_table()), Input(*self.engine_layout.get_id())

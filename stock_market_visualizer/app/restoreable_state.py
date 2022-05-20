@@ -9,6 +9,36 @@ from httpx import URL
 from stock_market_visualizer.app.config import get_settings
 
 
+def store_state(
+    redis,
+    header_title,
+    engine_id,
+    start_date,
+    end_date,
+    indicators,
+    show_ticker_table,
+    show_indicator_table,
+    show_signal_table,
+):
+    state = {}
+    state["header-title"] = header_title
+    state["engine-id"] = engine_id
+    state["start-date"] = start_date
+    state["end-date"] = end_date
+    state["indicators"] = indicators
+    state["show-ticker-table"] = show_ticker_table
+    state["show-indicator-table"] = show_indicator_table
+    state["show-signal-table"] = show_signal_table
+
+    state_id = str(uuid.uuid4())
+    redis.set(
+        state_id,
+        json.dumps(state),
+        get_settings().redis_restoreable_state_expiration_time,
+    )
+    return state_id
+
+
 class RestoreableStateLayout:
     def __init__(self):
         self.location_id = "url"
@@ -93,24 +123,18 @@ class RestoreableStateLayout:
         ):
             if n_clicks == 0:
                 return dash.no_update
-            url = URL(url)
-            state = {}
-            state["header-title"] = header_title
-            state["engine-id"] = engine_id
-            state["start-date"] = start_date
-            state["end-date"] = end_date
-            state["indicators"] = indicators
-            state["show-ticker-table"] = show_ticker_table
-            state["show-indicator-table"] = show_indicator_table
-            state["show-signal-table"] = show_signal_table
-
-            redis = redis_getter()
-            state_id = str(uuid.uuid4())
-            redis.set(
-                state_id,
-                json.dumps(state),
-                get_settings().redis_restoreable_state_expiration_time,
+            state_id = store_state(
+                redis_getter(),
+                header_title,
+                engine_id,
+                start_date,
+                end_date,
+                indicators,
+                show_ticker_table,
+                show_indicator_table,
+                show_signal_table,
             )
+            url = URL(url)
             splitted_url = str(url).split("engine/")
             assert 0 < len(splitted_url) <= 2
             return f"{splitted_url[0]}engine/{state_id}"
