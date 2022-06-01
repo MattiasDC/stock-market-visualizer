@@ -1,6 +1,7 @@
 import json
 
 from dash import dcc, html
+from plotly.colors import n_colors
 from stock_market.common.factory import Factory
 from stock_market.core import Sentiment
 from stock_market.ext.signal import (
@@ -25,6 +26,19 @@ def get_sentiment_color(sentiment):
         return "seagreen"
     assert sentiment == Sentiment.BEARISH
     return "crimson"
+
+
+def get_sentiment_colors(sentiment, n):
+    assert n > 0
+    if n == 1:
+        return [get_sentiment_color(sentiment)]
+
+    if sentiment == Sentiment.NEUTRAL:
+        return ["grey"] * n
+    elif sentiment == Sentiment.BULLISH:
+        return n_colors("rgb(27,82,51)", "rgb(68,193,123)", n, colortype="rgb")
+    assert sentiment == Sentiment.BEARISH
+    return n_colors("rgb(150,14,41)", "rgb(239,78,110)", n, colortype="rgb")
 
 
 def get_sentiment_shape(sentiment):

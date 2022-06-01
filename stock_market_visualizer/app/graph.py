@@ -9,13 +9,27 @@ from dash_extensions.enrich import Input, Output
 from dateutil.rrule import DAILY, FR, MO, TH, TU, WE, rrule
 from plotly.subplots import make_subplots
 from stock_market.common.factory import Factory
-from stock_market.core import OHLC
+from stock_market.core import OHLC, Sentiment
 from stock_market.core.time_series import TimeSeries, make_relative
 from stock_market.ext.indicator import register_indicator_factories
-from utils.algos import all_equal, split_elements
+from utils.algos import all_equal, max_dist_indices, split_elements
 
 import stock_market_visualizer.app.sme_api_helper as api
-from stock_market_visualizer.app.signals.common import get_sentiment_shape
+from stock_market_visualizer.app.signals.common import (
+    get_sentiment_colors,
+    get_sentiment_shape,
+)
+
+
+class SentimentColorProvider:
+    def __init__(self, n):
+        if n == 0:
+            return
+        self.colors = {s: get_sentiment_colors(s, n) for s in Sentiment}
+        self.index_generators = {s: max_dist_indices(n) for s in Sentiment}
+
+    def get(self, sentiment):
+        return self.colors[sentiment][next(self.index_generators[sentiment])]
 
 
 class GraphLayout:
@@ -85,7 +99,7 @@ class GraphLayout:
         def get_signal_sentiment(s):
             return s.sentiment
 
-        def __add_signals(figure, index, signals):
+        def __add_signals(figure, index, signals, color_provider):
             grouped_signals = groupby(
                 split_elements(signals, key=get_signal_sentiment),
                 key=get_signal_sentiment,
@@ -96,21 +110,23 @@ class GraphLayout:
             ]
             for sentiment_signals in groups:
                 first = sentiment_signals[0]
+                sentiment = first.sentiment
                 figure.add_trace(
                     go.Scatter(
                         name=first.name
-                        + ("" if len(groups) == 1 else f" ({first.sentiment.value})"),
+                        + ("" if len(groups) == 1 else f" ({sentiment.value})"),
                         x=[s.date for s in sentiment_signals],
                         y=[index] * len(sentiment_signals),
                         mode="markers",
-                        marker_symbol=get_sentiment_shape(first.sentiment),
+                        marker_symbol=get_sentiment_shape(sentiment),
+                        marker_color=color_provider.get(sentiment),
                     ),
                     col=1,
                     row=2,
                 )
             return figure
 
-        def __add_ticker_signals(figure, signals, ticker_closes):
+        def __add_ticker_signals(figure, signals, ticker_closes, color_provider):
             ticker_symbol = signals[0].tickers[0].symbol
             ticker_close = ticker_closes[ticker_symbol]
             grouped_signals = groupby(
@@ -123,11 +139,12 @@ class GraphLayout:
             ]
             for sentiment_signals in groups:
                 first = sentiment_signals[0]
+                sentiment = first.sentiment
                 figure.add_trace(
                     go.Scatter(
                         name=first.name
                         + f" ({ticker_symbol})"
-                        + ("" if len(groups) == 1 else f" ({first.sentiment.value})"),
+                        + ("" if len(groups) == 1 else f" ({sentiment.value})"),
                         x=[s.date for s in sentiment_signals],
                         y=[
                             ticker_close.time_values[
@@ -136,8 +153,9 @@ class GraphLayout:
                             for s in sentiment_signals
                         ],
                         mode="markers",
-                        marker_symbol=get_sentiment_shape(first.sentiment),
+                        marker_symbol=get_sentiment_shape(sentiment),
                         marker_size=12,
+                        marker_color=color_provider.get(sentiment),
                     ),
                     col=1,
                     row=1,
@@ -148,13 +166,16 @@ class GraphLayout:
             api.get_signals(engine_id, client).signals, key=get_signal_name
         )
         grouped_signals = groupby(all_signals, key=get_signal_name)
+        color_provider = SentimentColorProvider(
+            len(list(groupby(all_signals, key=get_signal_name)))
+        )
         for i, (g, signals) in enumerate(grouped_signals):
             signals = list(signals)
             assert all_equal([s.tickers for s in signals])
             if len(signals[0].tickers) == 1:
-                __add_ticker_signals(figure, signals, ticker_closes)
+                __add_ticker_signals(figure, signals, ticker_closes, color_provider)
             else:
-                __add_signals(figure, i, signals)
+                __add_signals(figure, i, signals, color_provider)
 
         figure.update_yaxes(visible=False, col=1, row=2)
         return figure

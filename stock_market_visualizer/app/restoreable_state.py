@@ -1,42 +1,11 @@
 import json
-import uuid
 
 import dash
 from dash import dcc
 from dash_extensions.enrich import Input, Output, State
 from httpx import URL
 
-from stock_market_visualizer.app.config import get_settings
-
-
-def store_state(
-    redis,
-    header_title,
-    engine_id,
-    start_date,
-    end_date,
-    indicators,
-    show_ticker_table,
-    show_indicator_table,
-    show_signal_table,
-):
-    state = {}
-    state["header-title"] = header_title
-    state["engine-id"] = engine_id
-    state["start-date"] = start_date
-    state["end-date"] = end_date
-    state["indicators"] = indicators
-    state["show-ticker-table"] = show_ticker_table
-    state["show-indicator-table"] = show_indicator_table
-    state["show-signal-table"] = show_signal_table
-
-    state_id = str(uuid.uuid4())
-    redis.set(
-        state_id,
-        json.dumps(state),
-        get_settings().redis_restoreable_state_expiration_time,
-    )
-    return state_id
+from stock_market_visualizer.app.config_store import ConfigStore
 
 
 class RestoreableStateLayout:
@@ -60,7 +29,9 @@ class RestoreableStateLayout:
         def update_state_from_url(url):
             url_splitted = URL(url).path.split("/engine/")
             if len(url_splitted) < 2:
-                return dash.no_update
+                return ConfigStore(redis_getter()).get(
+                    ConfigStore.DEFAULT_VIEW_CONFIG_KEY
+                )
             return url_splitted[1]
 
         @app.callback(
@@ -123,8 +94,7 @@ class RestoreableStateLayout:
         ):
             if n_clicks == 0:
                 return dash.no_update
-            state_id = store_state(
-                redis_getter(),
+            state_id = ConfigStore(redis_getter()).store_state(
                 header_title,
                 engine_id,
                 start_date,

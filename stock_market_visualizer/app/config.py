@@ -26,6 +26,8 @@ class Settings(BaseSettings):
     redis_restoreable_state_expiration_time: dt.timedelta = dt.timedelta(
         days=os.getenv("REDIS_RESTOREABLE_STATE_EXPIRATION_DAYS", 30)
     )
+    default_engine_config: str = os.getenv("DEFAULT_ENGINE_CONFIG")
+    default_view_config: str = os.getenv("DEFAULT_VIEW_CONFIG")
 
 
 @cache

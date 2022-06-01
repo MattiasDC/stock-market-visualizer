@@ -1,0 +1,100 @@
+{
+  "stock_market" :
+    {
+      "start_date" : "2018-01-01",
+      "tickers" : [{"symbol" : "ARKK"}]
+    },
+  "signal_detectors" :
+    [
+      {
+        "static_name": "Graph",
+        "config": {
+          "id": 6759008,
+          "name": "Puru ARKK Hedge",
+          "signal_detectors": [
+            {
+              "name": "Crossover",
+              "config": "{\"id\": 1853088, \"name\": \"SME50-Bear\", \"ticker\": \"\\\"ARKK\\\"\", \"responsive_indicator_getter\": {\"name\": \"Identity\", \"config\": \"\\\"\\\"\"}, \"unresponsive_indicator_getter\": {\"name\": \"ExponentialMovingAverage\", \"config\": \"50\"}, \"sentiment\": \"\\\"BEARISH\\\"\"}"
+            },
+            {
+              "name": "Crossover",
+              "config": "{\"id\": 2843495, \"name\": \"SME5-7-Bullish\", \"ticker\": \"\\\"ARKK\\\"\", \"responsive_indicator_getter\": {\"name\": \"ExponentialMovingAverage\", \"config\": \"5\"}, \"unresponsive_indicator_getter\": {\"name\": \"ExponentialMovingAverage\", \"config\": \"7\"}, \"sentiment\": \"\\\"BULLISH\\\"\"}"
+            },
+            {
+              "name": "Crossover",
+              "config": "{\"id\": 6643945, \"name\": \"SME5-7-Bear\", \"ticker\": \"\\\"ARKK\\\"\", \"responsive_indicator_getter\": {\"name\": \"ExponentialMovingAverage\", \"config\": \"5\"}, \"unresponsive_indicator_getter\": {\"name\": \"ExponentialMovingAverage\", \"config\": \"7\"}, \"sentiment\": \"\\\"BEARISH\\\"\"}"
+            },
+            {
+              "name": "Crossover",
+              "config": "{\"id\": 9914169, \"name\": \"SME50-Bullish\", \"ticker\": \"\\\"ARKK\\\"\", \"responsive_indicator_getter\": {\"name\": \"Identity\", \"config\": \"\\\"\\\"\"}, \"unresponsive_indicator_getter\": {\"name\": \"ExponentialMovingAverage\", \"config\": \"50\"}, \"sentiment\": \"\\\"BULLISH\\\"\"}"
+            }
+          ],
+          "machine": {
+            "before_state_change": [],
+            "after_state_change": [],
+            "prepare_event": [],
+            "finalize_event": [],
+            "send_event": false,
+            "auto_transitions": true,
+            "ignore_invalid_triggers": null,
+            "queued": false,
+            "initial": "8171938",
+            "transitions": [
+              {
+                "source": "8171938",
+                "dest": "2378401",
+                "trigger": "1853088"
+              },
+              {
+                "source": "2378401",
+                "dest": "3820248",
+                "trigger": "2843495"
+              },
+              {
+                "source": "3820248",
+                "dest": "2378401",
+                "trigger": "6643945"
+              },
+              {
+                "source": "3820248",
+                "dest": "8171938",
+                "trigger": "9914169"
+              },
+              {
+                "source": "2378401",
+                "dest": "8171938",
+                "trigger": "9914169"
+              }
+            ],
+            "states": [
+              {
+                "ignore_invalid_triggers": "True",
+                "name": "8171938"
+              },
+              {
+                "on_exit": [
+                  "add_bullish_signal"
+                ],
+                "on_enter": [
+                  "add_bearish_signal"
+                ],
+                "ignore_invalid_triggers": "True",
+                "name": "2378401"
+              },
+              {
+                "ignore_invalid_triggers": "True",
+                "name": "3820248"
+              }
+            ],
+            "models": [
+              {
+                "state": "2378401",
+                "name": "140292491125712",
+                "class-name": "stock_market.ext.signal.graph_signal_detector.Model"
+              }
+            ]
+          }
+        }
+      }
+    ]
+}

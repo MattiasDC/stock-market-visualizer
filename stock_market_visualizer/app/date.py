@@ -127,6 +127,8 @@ class DateLayout:
                 return dash.no_update
 
             if engine_start_date != start_date:
+                print(engine_start_date, flush=True)
+                print(start_date, flush=True)
                 engine_id = api.create_engine(
                     start_date, tickers, signal_detectors, client
                 )

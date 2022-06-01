@@ -18,6 +18,8 @@ services:
       - PORT=8000
       - SSL_KEYFILE=/certs/0.0.0.0-key.pem
       - SSL_CERTFILE=/certs/0.0.0.0.pem
+      - DEFAULT_ENGINE_CONFIG=default_configs/puru_arkk_hedge.json
+      - DEFAULT_VIEW_CONFIG=default_configs/view_config.json
     volumes:
       - .:/app
       - ~/docker/certs:/certs

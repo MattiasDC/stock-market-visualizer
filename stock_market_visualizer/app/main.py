@@ -1,15 +1,12 @@
-import datetime as dt
-import uuid
-
 import uvicorn as uvicorn
 from dash_extensions.enrich import DashProxy, MultiplexerTransform
 from fastapi import FastAPI
 from starlette.middleware.wsgi import WSGIMiddleware
 
 from stock_market_visualizer.app.config import get_settings
+from stock_market_visualizer.app.config_store import configure_default_configs
 from stock_market_visualizer.app.layout import Layout
 from stock_market_visualizer.app.redis_helper import init_redis_pool
-from stock_market_visualizer.app.restoreable_state import store_state
 from stock_market_visualizer.common.requests import ClientSessionGenerator
 
 layout = Layout()
@@ -30,39 +27,14 @@ app.mount("/sme", WSGIMiddleware(dash_app.server))
 
 @app.on_event("startup")
 async def startup_event():
-    app.state.client_generator = ClientSessionGenerator()
     app.state.redis = init_redis_pool()
+    configuration_task = configure_default_configs(app.state.redis, get_settings())
+    app.state.client_generator = ClientSessionGenerator()
     dash_app.layout = layout.get_layout()
     layout.register_callbacks(
         dash_app, app.state.client_generator.get, lambda: app.state.redis
     )
-
-
-@app.post("/store_external_configuration")
-async def store_external_configuration(
-    header_title: str,
-    engine_id: uuid.UUID,
-    start_date: dt.date,
-    end_date: dt.date,
-    show_ticker_table: bool,
-    show_indicator_table: bool,
-    show_signal_table: bool,
-):
-    def bool_to_list(value):
-        return [True] if value else []
-
-    state_id = store_state(
-        app.state.redis,
-        header_title,
-        str(engine_id),
-        start_date.isoformat(),
-        end_date.isoformat(),
-        [],
-        bool_to_list(show_ticker_table),
-        bool_to_list(show_indicator_table),
-        bool_to_list(show_signal_table),
-    )
-    return state_id
+    await configuration_task
 
 
 if __name__ == "__main__":
