@@ -12,7 +12,6 @@ from stock_market_visualizer.common.requests import ClientSessionGenerator
 layout = Layout()
 dash_app = DashProxy(
     __name__,
-    requests_pathname_prefix="/sme/",
     prevent_initial_callbacks=True,
     transforms=[MultiplexerTransform()],
     meta_tags=[{"name": "viewport", "content": "width=device-width, initial-scale=1"}],
@@ -22,7 +21,7 @@ dash_app = DashProxy(
 dash_app.title = "Stock Market Engine"
 
 app = FastAPI(title="Stock Market Visualizer")
-app.mount("/sme", WSGIMiddleware(dash_app.server))
+app.mount("", WSGIMiddleware(dash_app.server))
 
 
 @app.on_event("startup")

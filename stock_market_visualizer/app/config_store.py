@@ -57,6 +57,8 @@ class ConfigStore:
 
 
 def load_json_from_file(file_path):
+    if file_path is None:
+        return None
     config = None
     with open(file_path) as f:
         config = json.load(f)
@@ -65,13 +67,15 @@ def load_json_from_file(file_path):
 
 async def configure_default_configs(redis, settings) -> None:
     engine_id = await configure_default_engine(redis, settings)
+    if engine_id is None:
+        return
     configure_default_engine_view(engine_id, redis, settings)
 
 
 async def configure_default_engine(redis, settings) -> None:
     engine_config = load_json_from_file(settings.default_engine_config)
     if engine_config is None:
-        return
+        return None
 
     for sd in engine_config["signal_detectors"]:
         sd["config"] = json.dumps(sd["config"])
@@ -81,7 +85,7 @@ async def configure_default_engine(redis, settings) -> None:
     response = await client.post(url="/create", json=engine_config)
     if response.status_code != HTTPStatus.OK:
         logger.error(f"Error during creation of default engine: {response.text}")
-        return
+        return None
 
     engine_id = response.json()
     logger.info(f"Configured default engine: {engine_id}")
