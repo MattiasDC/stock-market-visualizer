@@ -18,7 +18,7 @@ dash_app = DashProxy(
     external_stylesheets=layout.get_themes(),
     assets_folder="./assets",
 )
-dash_app.title = "Stock Market Engine"
+dash_app.title = get_settings().title
 
 app = FastAPI(title="Stock Market Visualizer")
 app.mount("", WSGIMiddleware(dash_app.server))

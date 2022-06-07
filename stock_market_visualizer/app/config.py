@@ -28,6 +28,7 @@ class Settings(BaseSettings):
     )
     default_engine_config: str = os.getenv("DEFAULT_ENGINE_CONFIG")
     default_view_config: str = os.getenv("DEFAULT_VIEW_CONFIG")
+    title: str = os.getenv("TITLE", "Stock Market Engine")
 
 
 @cache

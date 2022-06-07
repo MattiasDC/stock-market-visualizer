@@ -1,4 +1,4 @@
-from collections import defaultdict
+from collections import Counter, defaultdict
 from itertools import groupby
 
 import dash_bootstrap_components as dbc
@@ -22,11 +22,15 @@ from stock_market_visualizer.app.signals.common import (
 
 
 class SentimentColorProvider:
-    def __init__(self, n):
-        if n == 0:
+    def __init__(self, sentiment_counters):
+        if sentiment_counters.total() == 0:
             return
-        self.colors = {s: get_sentiment_colors(s, n) for s in Sentiment}
-        self.index_generators = {s: max_dist_indices(n) for s in Sentiment}
+        self.colors = {
+            s: get_sentiment_colors(s, sentiment_counters[s]) for s in Sentiment
+        }
+        self.index_generators = {
+            s: max_dist_indices(sentiment_counters[s]) for s in Sentiment
+        }
 
     def get(self, sentiment):
         return self.colors[sentiment][next(self.index_generators[sentiment])]
@@ -166,9 +170,9 @@ class GraphLayout:
             api.get_signals(engine_id, client).signals, key=get_signal_name
         )
         grouped_signals = groupby(all_signals, key=get_signal_name)
-        color_provider = SentimentColorProvider(
-            len(list(groupby(all_signals, key=get_signal_name)))
-        )
+        unique_name_sentiments = set((s.name, s.sentiment) for s in all_signals)
+        sentiment_counters = Counter(s for (_, s) in unique_name_sentiments)
+        color_provider = SentimentColorProvider(sentiment_counters)
         for i, (g, signals) in enumerate(grouped_signals):
             signals = list(signals)
             assert all_equal([s.tickers for s in signals])

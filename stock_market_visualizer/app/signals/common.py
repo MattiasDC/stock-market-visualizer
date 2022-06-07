@@ -29,7 +29,8 @@ def get_sentiment_color(sentiment):
 
 
 def get_sentiment_colors(sentiment, n):
-    assert n > 0
+    if n == 0:
+        return []
     if n == 1:
         return [get_sentiment_color(sentiment)]
 

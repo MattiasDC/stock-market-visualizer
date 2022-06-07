@@ -1,6 +1,8 @@
 from dash import dcc, html
 from dash_extensions.enrich import Input, Output
 
+from stock_market_visualizer.app.config import get_settings
+
 
 class HeaderLayout:
     def __init__(self):
@@ -21,7 +23,7 @@ class HeaderLayout:
                         dcc.Input(
                             id=self.title,
                             type="text",
-                            value="Stock Market Engine",
+                            value=get_settings().title,
                             className="d-inline",
                             style={"border-style": "none"},
                         ),
