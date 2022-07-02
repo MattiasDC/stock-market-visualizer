@@ -28,7 +28,7 @@ def __yamllint_cmd():
     return ["yamllint", "."]
 
 
-@nox.session(python="3.9", reuse_venv=REUSE_VENV)
+@nox.session(python="3.10", reuse_venv=REUSE_VENV)
 def lint(session):
     session.install(".[dev]")
     session.run(*__black_cmd())

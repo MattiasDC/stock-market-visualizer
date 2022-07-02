@@ -1,0 +1,5 @@
+.env
+.nox
+build
+.pytest_cache
+data

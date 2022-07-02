@@ -9,7 +9,7 @@ services:
     ports:
       - 8000:8000
     depends_on:
-      - api
+      - stock-market-engine
       - redis
     environment:
       - DEBUG=True
@@ -25,9 +25,8 @@ services:
       - .:/app
       - ~/docker/certs:/certs
 
-  api:
+  stock-market-engine:
     container_name: sme-api-smv
-    # image: repo.treescale.com/xelicon/stock-market-engine:v0.7.0
     image: stock-market-engine:v0.8.0
     command: >
       uvicorn
@@ -42,11 +41,33 @@ services:
     environment:
       - REDIS_DB=1
       - MAX_TICKER_SYMBOL_LENGTH=10
+      - STOCK_UPDATER=proxy
+      - STOCK_UPDATER_CONFIG="http://stock-info-api-smv:8002/ohlc"
+    depends_on:
+      - stock-info-api
+      - redis
+
+  stock-info-api:
+    container_name: stock-info-api-smv
+    image: stock-info-api:v0.0.0
+    command: >
+      uvicorn
+        stock_info_api.main:app
+        --host 0.0.0.0
+        --port 8002
+        --lifespan=on
+        --use-colors
+        --log-level debug
+        --reload
+    ports:
+      - 8002:8002
+    environment:
+      - REDIS_DB=2
     depends_on:
       - redis
 
   redis:
-    container_name: redis-smv
+    container_name: redis-stock-market-visualizer
     image: redis:alpine
     restart: always
     ports:

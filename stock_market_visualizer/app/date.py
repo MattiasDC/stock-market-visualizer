@@ -109,6 +109,7 @@ class DateLayout:
                 return dash.no_update
 
             end_date = min(end_date, dt.datetime.now().date())
+            end_date += dt.timedelta(days=1)  # Make exclusive
 
             if end_date < min_end_date:
                 return dash.no_update
@@ -127,8 +128,6 @@ class DateLayout:
                 return dash.no_update
 
             if engine_start_date != start_date:
-                print(engine_start_date, flush=True)
-                print(start_date, flush=True)
                 engine_id = api.create_engine(
                     start_date, tickers, signal_detectors, client
                 )
