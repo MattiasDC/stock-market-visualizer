@@ -7,7 +7,6 @@ from stock_market.ext.indicator import Identity
 from stock_market.ext.signal import CrossoverSignalDetector
 from utils.logging import get_logger
 
-import stock_market_visualizer.app.sme_api_helper as api
 from stock_market_visualizer.app.indicator import (
     ModalIndicatorCreatorLayout,
     get_indicators_with_identity,
@@ -72,10 +71,10 @@ class IndicatorGetterLayout:
 
 
 class CrossoverDetectorHandler(TickerDetectorHandler):
-    def __init__(self, app, client, crossover_layout):
+    def __init__(self, app, engine_api, crossover_layout):
         super().__init__(
             app,
-            client,
+            engine_api,
             CrossoverSignalDetector,
             crossover_layout.engine_layout,
             crossover_layout.signal_data_placeholder_layout,
@@ -84,7 +83,7 @@ class CrossoverDetectorHandler(TickerDetectorHandler):
         self.crossover_layout = crossover_layout
 
         indicators = get_indicators_with_identity()
-        for indicator in api.get_supported_indicators(client):
+        for indicator in engine_api.get_supported_indicators():
             if indicator["indicator_name"] not in [
                 i.__name__ for i in indicators.keys()
             ]:
@@ -94,7 +93,7 @@ class CrossoverDetectorHandler(TickerDetectorHandler):
 
         for indicator in indicators.keys():
             if indicator.__name__ not in [
-                i["indicator_name"] for i in api.get_supported_indicators(client)
+                i["indicator_name"] for i in engine_api.get_supported_indicators()
             ]:
                 logger.warning(
                     f"{indicator} is implemented in the stock market visualizer, but"
@@ -210,13 +209,17 @@ class CrossoverDetectorHandler(TickerDetectorHandler):
             return engine_id
         if "sentiment" not in data:
             return engine_id
-        new_engine_id = api.add_signal_detector(
-            engine_id,
+
+        engine = self.api().get_engine(engine_id)
+        if engine is None:
+            return engine_id
+
+        new_engine_id = engine.add_signal_detector(
             {
                 "static_name": self.name(),
                 "config": json.dumps(
                     {
-                        "id": get_random_detector_id(engine_id, self.client()),
+                        "id": get_random_detector_id(engine),
                         "name": data["crossover_name"],
                         "ticker": json.dumps(data["ticker"]),
                         "responsive_indicator_getter": data["Responsive"],
@@ -225,7 +228,6 @@ class CrossoverDetectorHandler(TickerDetectorHandler):
                     }
                 ),
             },
-            self.client(),
         )
         return new_engine_id
 
@@ -253,5 +255,5 @@ class CrossoverDetectorConfigurationLayout(SignalDetectorConfigurationLayout):
         )
         super().__init__(name, child_configs)
 
-    def get_handler(self, app, client):
-        return CrossoverDetectorHandler(app, client, self)
+    def get_handler(self, app, engine_api):
+        return CrossoverDetectorHandler(app, engine_api, self)

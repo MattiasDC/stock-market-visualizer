@@ -3,7 +3,6 @@ import json
 from dash import dcc
 from dash_extensions.enrich import Input, Output, State
 
-import stock_market_visualizer.app.sme_api_helper as api
 from stock_market_visualizer.app.signals.common import (
     SignalDetectorConfigurationLayout,
     get_random_detector_id,
@@ -31,14 +30,14 @@ class TickerDetectorHandler:
     def __init__(
         self,
         app,
-        client,
+        engine_api,
         detector_cls,
         engine_layout,
         signal_data_placeholder_layout,
         dropdown_layout,
     ):
         self.__app = app
-        self.__client = client
+        self.__engine_api = engine_api
         self.__detector_cls = detector_cls
 
         @self.__app.callback(
@@ -71,31 +70,37 @@ class TickerDetectorHandler:
     def app(self):
         return self.__app
 
-    def client(self):
-        return self.__client
+    def api(self):
+        return self.__engine_api
 
     def __get_options(self, engine_id):
-        tickers = api.get_tickers(engine_id, self.__client)
-        return [{"label": t, "value": t} for t in tickers]
+        engine = self.api().get_engine(engine_id)
+        if engine is None:
+            return []
+        return [{"label": t, "value": t} for t in engine.get_tickers()]
 
     def activate(self, engine_id, data):
         return engine_id, data
 
     def create(self, engine_id, data):
-        new_engine_id = api.add_signal_detector(
-            engine_id,
+        engine = self.api().get_engine(engine_id)
+        if engine is None:
+            return engine_id
+
+        new_engine = engine.add_signal_detector(
             {
                 "static_name": self.name(),
                 "config": json.dumps(
                     {
-                        "id": get_random_detector_id(engine_id, self.__client),
+                        "id": get_random_detector_id(engine),
                         "ticker": json.dumps(data["ticker"]),
                     }
                 ),
             },
-            self.__client,
         )
-        return new_engine_id
+        if new_engine is None:
+            return engine_id
+        return new_engine.engine_id
 
     def get_id(self, config):
         return json.loads(config)["id"]

@@ -53,12 +53,12 @@ class Layout:
     def get_layout(self):
         return self.layout
 
-    def register_callbacks(self, app, client_getter, redis_getter):
+    def register_callbacks(self, app, engine_api, redis):
         self.disclaimer_layout.register_callbacks(app)
         self.header_layout.register_callbacks(app)
-        self.date_layout.register_callbacks(app, client_getter)
-        self.graph_layout.register_callbacks(app, client_getter)
-        self.ticker_layout.register_callbacks(app, client_getter)
-        self.indicator_layout.register_callbacks(app, client_getter)
-        self.signal_detector_layout.register_callbacks(app, client_getter)
-        self.restoreable_state_layout.register_callbacks(app, redis_getter)
+        self.date_layout.register_callbacks(app, engine_api)
+        self.graph_layout.register_callbacks(app, engine_api)
+        self.ticker_layout.register_callbacks(app, engine_api)
+        self.indicator_layout.register_callbacks(app)
+        self.signal_detector_layout.register_callbacks(app, engine_api)
+        self.restoreable_state_layout.register_callbacks(app, redis)

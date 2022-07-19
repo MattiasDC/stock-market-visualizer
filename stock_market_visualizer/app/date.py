@@ -6,8 +6,6 @@ from dash import dcc, html
 from dash_extensions.enrich import Input, Output, State
 from utils.dateutils import from_sdate
 
-import stock_market_visualizer.app.sme_api_helper as api
-
 
 class DateLayout:
     def __init__(self, engine_layout, ticker_layout, signal_layout):
@@ -69,9 +67,7 @@ class DateLayout:
             signal_detectors.append(sd)
         return signal_detectors
 
-    def register_callbacks(self, app, client_getter):
-        client = client_getter()
-
+    def register_callbacks(self, app, engine_api):
         @app.callback(
             Output(self.end_date_picker, "min_date_allowed"),
             Input(*self.get_start_date()),
@@ -117,22 +113,21 @@ class DateLayout:
             tickers = self.ticker_layout.get_tickers(ticker_rows)
             signal_detectors = self.__get_signal_detectors(signal_detector_rows)
             if engine_id is None:
-                engine_id = api.create_engine(
-                    start_date, tickers, signal_detectors, client
-                )
-            if engine_id is None:
+                engine = engine_api.create_engine(start_date, tickers, signal_detectors)
+            else:
+                engine = engine_api.get_engine(engine_id)
+
+            if engine is None:
                 return dash.no_update
 
-            engine_start_date = api.get_start_date(engine_id, client)
+            engine_start_date = engine.get_start_date()
             if engine_start_date is None:
                 return dash.no_update
 
             if engine_start_date != start_date:
-                engine_id = api.create_engine(
-                    start_date, tickers, signal_detectors, client
-                )
-                if engine_id is None:
+                engine = engine_api.create_engine(start_date, tickers, signal_detectors)
+                if engine is None:
                     return dash.no_update
 
-            new_engine_id = api.update_engine(engine_id, end_date, client)
-            return new_engine_id, end_date
+            new_engine = engine.update_engine(end_date)
+            return new_engine.engine_id, end_date

@@ -15,7 +15,6 @@ from stock_market.ext.signal import (
 )
 from utils.rnd import get_random_int_excluding
 
-import stock_market_visualizer.app.sme_api_helper as api
 from stock_market_visualizer.app.config import get_settings
 from stock_market_visualizer.app.signals.common import (
     CustomNameLayout,
@@ -54,8 +53,8 @@ def get_element_by_id(identifier, elements):
 
 
 class GraphDetectorHandler:
-    def __init__(self, app, client, layout):
-        self.__client = client
+    def __init__(self, app, engine_api, layout):
+        self.__engine_api = engine_api
         self.__layout = layout
 
         @app.callback(
@@ -300,7 +299,12 @@ class GraphDetectorHandler:
             detector_id = edge.get("detector_id", None)
             if detector_id is None:
                 return builder
-            detector = get_signal_detector(detector_id, engine_id, self.__client)
+
+            engine = self.__engine_api.get_engine(engine_id)
+            if engine is None:
+                return builder
+
+            detector = get_signal_detector(detector_id, engine)
             if detector not in builder.detectors:
                 builder = builder.add_detector(detector)
             builder = builder.add_transition(
@@ -311,10 +315,12 @@ class GraphDetectorHandler:
         if "graph" not in data:
             return engine_id
 
+        engine = self.__engine_api.get_engine(engine_id)
+        if engine is None:
+            return engine_id
+
         elements = data["graph"]
-        builder = GraphSignalDetectorBuilder(
-            get_random_detector_id(engine_id, self.__client)
-        )
+        builder = GraphSignalDetectorBuilder(get_random_detector_id(engine))
 
         if "signal_name" not in data or data["signal_name"] is None:
             return engine_id
@@ -332,17 +338,15 @@ class GraphDetectorHandler:
             return engine_id
 
         detector = builder.build()
-        new_engine_id = api.add_signal_detector(
-            engine_id,
+        new_engine = engine.add_signal_detector(
             {
                 "static_name": self.name(),
                 "config": detector.to_json(),
             },
-            self.__client,
         )
-        if new_engine_id is None:
+        if new_engine is None:
             return engine_id
-        return new_engine_id
+        return new_engine.engine_id
 
     def get_id(self, config):
         return json.loads(config)["id"]
@@ -466,5 +470,5 @@ class GraphDetectorConfigurationLayout(SignalDetectorConfigurationLayout):
         node_types["None"] = remove_node_type
         return node_types
 
-    def get_handler(self, app, client):
-        return GraphDetectorHandler(app, client, self)
+    def get_handler(self, app, engine_api):
+        return GraphDetectorHandler(app, engine_api, self)

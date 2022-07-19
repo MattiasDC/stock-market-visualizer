@@ -104,7 +104,7 @@ class IndicatorLayout:
     def get_layout(self):
         return [self.checkable_table.get_layout()] + self.modal_creator.get_layout()
 
-    def register_callbacks(self, app, client_getter):
+    def register_callbacks(self, app):
         self.checkable_table.register_callbacks(app)
 
         def get_active_ticker(cell, rows):

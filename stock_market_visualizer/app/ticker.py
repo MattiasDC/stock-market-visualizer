@@ -3,8 +3,6 @@ import dash_bootstrap_components as dbc
 from dash import dash_table, dcc, html
 from dash_extensions.enrich import Input, Output, State
 
-import stock_market_visualizer.app.sme_api_helper as api
-
 
 class TickerLayout:
     def __init__(self, engine_layout):
@@ -84,9 +82,7 @@ class TickerLayout:
     def get_layout(self):
         return self.layout
 
-    def register_callbacks(self, app, client_getter):
-        client = client_getter()
-
+    def register_callbacks(self, app, engine_api):
         @app.callback(
             Input(*self.get_show_ticker_table()),
             Output(self.collapse_ticker_table, "is_open"),
@@ -98,7 +94,11 @@ class TickerLayout:
             Output(*self.get_ticker_table()), Input(*self.engine_layout.get_id())
         )
         def update_ticker_table(engine_id):
-            tickers = api.get_tickers(engine_id, client)
+            engine = engine_api.get_engine(engine_id)
+            if engine is None:
+                return dash.no_update
+
+            tickers = engine.get_tickers()
             return [{"ticker-col": ticker} for ticker in tickers]
 
         @app.callback(
@@ -125,11 +125,15 @@ class TickerLayout:
             if engine_id is None:
                 return no_update
 
-            engine_id = api.add_ticker(engine_id, ticker_symbol, client)
-            if engine_id is None:
+            engine = engine_api.get_engine(engine_id)
+            if engine is None:
                 return no_update
 
-            return "", engine_id
+            engine = engine.add_ticker(ticker_symbol)
+            if engine is None:
+                return no_update
+
+            return "", engine.engine_id
 
         @app.callback(
             Output(*self.engine_layout.get_id()),
@@ -152,8 +156,12 @@ class TickerLayout:
             assert len(removed_ticker_symbols) == 1
             ticker_symbol = next(iter(removed_ticker_symbols[0].values()))
 
-            engine_id = api.remove_ticker(engine_id, ticker_symbol, client)
-            if engine_id is None:
+            engine = engine_api.get_engine(engine_id)
+            if engine is None:
                 return dash.no_update
 
-            return engine_id
+            engine = engine.remove_ticker(ticker_symbol)
+            if engine is None:
+                return dash.no_update
+
+            return engine.engine_id

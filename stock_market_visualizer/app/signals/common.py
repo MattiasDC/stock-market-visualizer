@@ -15,7 +15,6 @@ from stock_market.ext.signal import (
 )
 from utils.rnd import get_random_int_excluding
 
-import stock_market_visualizer.app.sme_api_helper as api
 from stock_market_visualizer.app.config import get_settings
 
 
@@ -51,30 +50,30 @@ def get_sentiment_shape(sentiment):
     return "triangle-down"
 
 
-def get_signal_detectors(engine_id, client):
+def get_signal_detectors(engine):
     factory = register_signal_detector_factories(Factory())
     return [
         factory.create(
             detector_json["static_name"], json.dumps(detector_json["config"])
         )
-        for detector_json in api.get_signal_detectors(engine_id, client)
+        for detector_json in engine.get_signal_detectors()
     ]
 
 
-def get_signal_detector(detector_id, engine_id, client):
-    for d in get_signal_detectors(engine_id, client):
+def get_signal_detector(detector_id, engine):
+    for d in get_signal_detectors(engine):
         if d.id == detector_id:
             return d
     return None
 
 
-def get_random_detector_id(engine_id, client):
-    ids = [d.id for d in get_signal_detectors(engine_id, client)]
+def get_random_detector_id(engine):
+    ids = [d.id for d in engine.get_signal_detectors()]
     return get_random_int_excluding(get_settings().max_id_generator, ids)
 
 
-def get_api_supported_signal_detectors(client):
-    return [sd["detector_name"] for sd in api.get_supported_signal_detectors(client)]
+def get_api_supported_signal_detectors(engine_api):
+    return [sd["detector_name"] for sd in engine_api.get_supported_signal_detectors()]
 
 
 def get_supported_trivial_config_signal_detectors():

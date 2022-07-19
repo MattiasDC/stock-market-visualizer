@@ -6,7 +6,6 @@ from dash import html
 from dash_extensions.enrich import Input, Output, State
 from utils.logging import get_logger
 
-import stock_market_visualizer.app.sme_api_helper as api
 from stock_market_visualizer.app.signals.common import (
     SignalDataPlaceholderLayout,
     get_api_supported_signal_detectors,
@@ -97,13 +96,14 @@ class SignalDetectorLayout:
             ),
         ]
 
-    def register_callbacks(self, app, client_getter):
+    def register_callbacks(self, app, engine_api):
         self.signal_detector_table.register_callbacks(app)
 
-        client = client_getter()
         detector_handlers = {
             dh.name(): dh
-            for dh in [cl.get_handler(app, client) for cl in self.get_config_layouts()]
+            for dh in [
+                cl.get_handler(app, engine_api) for cl in self.get_config_layouts()
+            ]
         }
 
         @app.callback(
@@ -123,13 +123,16 @@ class SignalDetectorLayout:
             Input(*self.engine_layout.get_id()),
         )
         def update_signal_table(engine_id):
+            engine = engine_api.get_engine(engine_id)
+            if engine is None:
+                return dash.no_update
             return [
                 {
                     "signal-col": signal_detector["name"],
                     "name": signal_detector["static_name"],
                     "config": json.dumps(signal_detector["config"]),
                 }
-                for signal_detector in api.get_signal_detectors(engine_id, client)
+                for signal_detector in engine.get_signal_detectors()
             ]
 
         @app.callback(
@@ -211,15 +214,18 @@ class SignalDetectorLayout:
             signal_detector_id = detector_handlers[removed_sd["name"]].get_id(
                 removed_sd["config"]
             )
-            new_engine_id = api.remove_signal_detector(
-                engine_id, signal_detector_id, client
-            )
+
+            engine = engine_api.get_engine(engine_id)
+            if engine is None:
+                return dash.no_update
+
+            new_engine_id = engine.remove_signal_detector(signal_detector_id)
 
             if new_engine_id is None:
                 return dash.no_update
             return new_engine_id
 
-        for sd in get_api_supported_signal_detectors(client):
+        for sd in get_api_supported_signal_detectors(engine_api):
             if sd not in detector_handlers.keys():
                 logger.warning(
                     f"{sd} signal detector is not implemented in the stock market"
@@ -227,7 +233,7 @@ class SignalDetectorLayout:
                 )
 
         for sd in detector_handlers.keys():
-            if sd not in get_api_supported_signal_detectors(client):
+            if sd not in get_api_supported_signal_detectors(engine_api):
                 logger.warning(
                     f"{sd} signal detector is implemented in the stock market"
                     " visualizer, but not supported by the engine"

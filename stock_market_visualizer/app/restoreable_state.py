@@ -24,14 +24,12 @@ class RestoreableStateLayout:
     def get_layout(self):
         return [self.location, self.restoreable_state]
 
-    def register_callbacks(self, app, redis_getter):
+    def register_callbacks(self, app, redis):
         @app.callback(Output(*self.get_restoreable_state()), Input(*self.get_url()))
         def update_state_from_url(url):
             url_splitted = URL(url).path.split("/engine/")
             if len(url_splitted) < 2:
-                return ConfigStore(redis_getter()).get(
-                    ConfigStore.DEFAULT_VIEW_CONFIG_KEY
-                )
+                return ConfigStore(redis).get(ConfigStore.DEFAULT_VIEW_CONFIG_KEY)
             return url_splitted[1]
 
         @app.callback(
@@ -46,7 +44,6 @@ class RestoreableStateLayout:
             Input(*self.get_restoreable_state()),
         )
         def update_from_state(state_id):
-            redis = redis_getter()
             state_json = redis.get(state_id)
             if state_json is None:
                 state = {}
@@ -94,7 +91,7 @@ class RestoreableStateLayout:
         ):
             if n_clicks == 0:
                 return dash.no_update
-            state_id = ConfigStore(redis_getter()).store_state(
+            state_id = ConfigStore(redis).store_state(
                 header_title,
                 engine_id,
                 start_date,

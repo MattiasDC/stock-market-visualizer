@@ -14,7 +14,6 @@ from stock_market.core.time_series import TimeSeries, make_relative
 from stock_market.ext.indicator import register_indicator_factories
 from utils.algos import all_equal, max_dist_indices, split_elements
 
-import stock_market_visualizer.app.sme_api_helper as api
 from stock_market_visualizer.app.signals.common import (
     get_sentiment_colors,
     get_sentiment_shape,
@@ -96,7 +95,7 @@ class GraphLayout:
 
         return figure
 
-    def __get_signal_lines(self, engine_id, client, ticker_closes, figure):
+    def __get_signal_lines(self, engine, ticker_closes, figure):
         def get_signal_name(s):
             return s.name
 
@@ -166,9 +165,7 @@ class GraphLayout:
                 )
             return figure
 
-        all_signals = sorted(
-            api.get_signals(engine_id, client).signals, key=get_signal_name
-        )
+        all_signals = sorted(engine.get_signals().signals, key=get_signal_name)
         grouped_signals = groupby(all_signals, key=get_signal_name)
         unique_name_sentiments = set((s.name, s.sentiment) for s in all_signals)
         sentiment_counters = Counter(s for (_, s) in unique_name_sentiments)
@@ -184,15 +181,15 @@ class GraphLayout:
         figure.update_yaxes(visible=False, col=1, row=2)
         return figure
 
-    def __get_ticker_closes(self, client, engine_id):
-        tickers = api.get_tickers(engine_id, client)
+    def __get_ticker_closes(self, engine):
+        tickers = engine.get_tickers()
         closes = {}
 
         if len(tickers) == 0:
             return closes
 
         for ticker in tickers:
-            ohlc_json = api.get_ticker_ohlc(engine_id, ticker, client)
+            ohlc_json = engine.get_ticker_ohlc(ticker)
             if ohlc_json is None:
                 continue
             closes[ticker] = OHLC.from_json(ohlc_json).close
@@ -222,25 +219,23 @@ class GraphLayout:
             figure = self.__create_indicator_traces(indicators, ticker, close, figure)
         return figure, len(closes)
 
-    def __get_traces_and_layout(self, client, engine_id, indicators):
-        share_x_axes = len(api.get_signals(engine_id, client).signals) > 0
+    def __get_traces_and_layout(self, engine, indicators):
+        share_x_axes = len(engine.get_signals().signals) > 0
         figure = make_subplots(
             rows=2, cols=1, shared_xaxes=share_x_axes, row_heights=[0.9, 0.1]
         )
         figure["layout"].update(margin=dict(l=0, r=0, b=0, t=0))
 
-        ticker_closes = self.__get_ticker_closes(client, engine_id)
+        ticker_closes = self.__get_ticker_closes(engine)
         figure, nof_ticker_lines = self.__get_traces(ticker_closes, indicators, figure)
         if nof_ticker_lines - sum(map(len, indicators.values())) > 1:
             figure.update_yaxes(tickformat=",.1%", row=1, col=1)
         if nof_ticker_lines > 0:
-            figure = self.__get_signal_lines(engine_id, client, ticker_closes, figure)
+            figure = self.__get_signal_lines(engine, ticker_closes, figure)
         figure.update_layout(template="plotly_white")
         return figure
 
-    def register_callbacks(self, app, client_getter):
-        client = client_getter()
-
+    def register_callbacks(self, app, engine_api):
         @app.callback(
             Output(*self.get_graph()),
             Input("indicator-table", "data"),
@@ -248,4 +243,5 @@ class GraphLayout:
         )
         def change(rows, engine_id):
             indicators = self.__get_configured_indicators(rows)
-            return self.__get_traces_and_layout(client, engine_id, indicators)
+            engine = engine_api.get_engine(engine_id)
+            return self.__get_traces_and_layout(engine, indicators)

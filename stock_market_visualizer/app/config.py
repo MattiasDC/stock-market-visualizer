@@ -18,7 +18,7 @@ class Settings(BaseSettings):
     debug: bool = os.getenv("DEBUG", False)
     max_ticker_symbol_length: int = os.getenv("MAX_TICKER_SYMBOL_LENGTH", 10)
     update_interval: int = os.getenv("UPDATE_INTERVAL_SECONDS", 5 * 60)
-    max_api_endpoint_cache_size: int = os.getenv("MAX_API_ENDPOINT_CACHE_SIZE", 20000)
+    max_api_endpoint_cache_size: int = os.getenv("MAX_API_ENDPOINT_CACHE_SIZE", 10000)
     max_id_generator: int = os.getenv("MAX_ID_GENERATOR", 10000000)
     redis_url: AnyUrl = os.getenv("REDIS_URL", "redis://redis")
     redis_port: int = os.getenv("REDIS_PORT", 6379)
