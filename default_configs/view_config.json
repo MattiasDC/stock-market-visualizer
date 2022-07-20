@@ -1,6 +1,6 @@
 {
 	"header_title": "Is Puru ARKK hedged?",
-	"last_x_days": 730,
+	"last_x_days": 365,
 	"show_ticker_table": false,
 	"show_indicator_table": false,
 	"show_signal_table": false
