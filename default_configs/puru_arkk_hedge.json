@@ -1,7 +1,6 @@
 {
   "stock_market" :
     {
-      "start_date" : "2018-01-01",
       "tickers" : [{"symbol" : "ARKK"}]
     },
   "signal_detectors" :

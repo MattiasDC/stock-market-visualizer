@@ -66,16 +66,27 @@ def load_json_from_file(file_path):
 
 
 async def configure_default_configs(redis, settings) -> None:
-    engine_id = await configure_default_engine(redis, settings)
-    if engine_id is None:
-        return
-    configure_default_engine_view(engine_id, redis, settings)
-
-
-async def configure_default_engine(redis, settings) -> None:
     engine_config = load_json_from_file(settings.default_engine_config)
     if engine_config is None:
         return None
+
+    view_config = load_json_from_file(settings.default_view_config)
+    engine_id = await configure_default_engine(
+        redis, settings, engine_config, view_config
+    )
+    if engine_id is None:
+        return None
+
+    if view_config is None:
+        return None
+    configure_default_engine_view(engine_id, redis, engine_config, view_config)
+
+
+async def configure_default_engine(redis, settings, engine_config, view_config) -> None:
+    start_date = dt.datetime.now().date() - dt.timedelta(
+        days=int(view_config["last_x_days"])
+    )
+    engine_config["stock_market"]["start_date"] = start_date.isoformat()
 
     for sd in engine_config["signal_detectors"]:
         sd["config"] = json.dumps(sd["config"])
@@ -92,14 +103,9 @@ async def configure_default_engine(redis, settings) -> None:
     return engine_id
 
 
-def configure_default_engine_view(engine_id, redis, settings) -> None:
-    view_config = load_json_from_file(settings.default_view_config)
-    if view_config is None:
-        return
-
-    end_date = dt.datetime.now().date()
+def configure_default_engine_view(engine_id, redis, engine_config, view_config) -> None:
     view_config["engine_id"] = str(engine_id)
-    view_config["end_date"] = end_date.isoformat()
+    view_config["end_date"] = dt.datetime.now().date().isoformat()
 
     def bool_to_list(value):
         return [True] if value else []
@@ -108,7 +114,7 @@ def configure_default_engine_view(engine_id, redis, settings) -> None:
     view_config_id = config_store.store_state(
         view_config["header_title"],
         view_config["engine_id"],
-        view_config["start_date"],
+        engine_config["stock_market"]["start_date"],
         view_config["end_date"],
         [],
         bool_to_list(view_config["show_ticker_table"]),
