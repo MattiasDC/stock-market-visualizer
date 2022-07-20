@@ -219,11 +219,11 @@ class SignalDetectorLayout:
             if engine is None:
                 return dash.no_update
 
-            new_engine_id = engine.remove_signal_detector(signal_detector_id)
+            new_engine = engine.remove_signal_detector(signal_detector_id)
 
-            if new_engine_id is None:
+            if new_engine is None:
                 return dash.no_update
-            return new_engine_id
+            return new_engine.engine_id
 
         for sd in get_api_supported_signal_detectors(engine_api):
             if sd not in detector_handlers.keys():

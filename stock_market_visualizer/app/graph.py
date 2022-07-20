@@ -228,7 +228,7 @@ class GraphLayout:
 
         ticker_closes = self.__get_ticker_closes(engine)
         figure, nof_ticker_lines = self.__get_traces(ticker_closes, indicators, figure)
-        if nof_ticker_lines - sum(map(len, indicators.values())) > 1:
+        if nof_ticker_lines > 1:
             figure.update_yaxes(tickformat=",.1%", row=1, col=1)
         if nof_ticker_lines > 0:
             figure = self.__get_signal_lines(engine, ticker_closes, figure)
