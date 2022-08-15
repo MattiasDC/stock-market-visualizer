@@ -27,7 +27,7 @@ services:
 
   stock-market-engine:
     container_name: sme-api-smv
-    image: xelicon/stock-market-engine:0.0.2
+    image: xelicon/stock-market-engine:0.0.3
     command: >
       uvicorn
         stock_market_engine.main:app
@@ -49,7 +49,7 @@ services:
 
   stock-info-api:
     container_name: stock-info-api-smv
-    image: xelicon/stock-info-api:0.0.2
+    image: xelicon/stock-info-api:0.0.3
     command: >
       uvicorn
         stock_info_api.main:app
