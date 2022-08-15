@@ -1,5 +1,5 @@
 import redis
-from utils.logging import get_logger
+from simputils.logging import get_logger
 
 from stock_market_visualizer.app.config import Settings
 

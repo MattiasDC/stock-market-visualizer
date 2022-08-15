@@ -2,6 +2,7 @@ import json
 
 from dash import dcc, html
 from plotly.colors import n_colors
+from simputils.rnd import get_random_int_excluding
 from stock_market.common.factory import Factory
 from stock_market.core import Sentiment
 from stock_market.ext.signal import (
@@ -13,7 +14,6 @@ from stock_market.ext.signal import (
     MonthlySignalDetector,
     register_signal_detector_factories,
 )
-from utils.rnd import get_random_int_excluding
 
 from stock_market_visualizer.app.config import get_settings
 

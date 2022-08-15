@@ -5,6 +5,7 @@ from functools import partial
 import dash
 from dash import html
 from dash_extensions.enrich import Input, Output, State
+from simputils.rnd import get_random_int_excluding
 from stock_market.common.factory import Factory
 from stock_market.ext.signal import (
     EnterOrExit,
@@ -13,7 +14,6 @@ from stock_market.ext.signal import (
     Sentiment,
     register_signal_detector_factories,
 )
-from utils.rnd import get_random_int_excluding
 
 from stock_market_visualizer.app.config import get_settings
 from stock_market_visualizer.app.signals.common import (

@@ -3,9 +3,9 @@ import json
 import dash
 from dash import html
 from dash_extensions.enrich import Input, Output, State
+from simputils.logging import get_logger
 from stock_market.ext.indicator import Identity
 from stock_market.ext.signal import CrossoverSignalDetector
-from utils.logging import get_logger
 
 from stock_market_visualizer.app.indicator import (
     ModalIndicatorCreatorLayout,

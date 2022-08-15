@@ -2,8 +2,8 @@ import dash
 import dash_bootstrap_components as dbc
 from dash import html
 from dash_extensions.enrich import Input, Output, State
+from simputils.inspection import get_constructor_arguments
 from stock_market.ext.indicator import ExponentialMovingAverage, Identity, MovingAverage
-from utils.inspection import get_constructor_arguments
 
 from stock_market_visualizer.common.checkable_table import CheckableTableLayout
 

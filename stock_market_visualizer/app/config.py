@@ -3,7 +3,7 @@ import os
 from functools import cache
 
 from pydantic import AnyUrl, BaseSettings
-from utils.logging import get_logger
+from simputils.logging import get_logger
 
 logger = get_logger(__name__)
 

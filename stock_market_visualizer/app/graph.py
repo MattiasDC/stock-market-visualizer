@@ -8,11 +8,11 @@ from dash import dcc
 from dash_extensions.enrich import Input, Output
 from dateutil.rrule import DAILY, FR, MO, TH, TU, WE, rrule
 from plotly.subplots import make_subplots
+from simputils.algos import all_equal, max_dist_indices, split_elements
 from stock_market.common.factory import Factory
 from stock_market.core import OHLC, Sentiment
 from stock_market.core.time_series import TimeSeries, make_relative
 from stock_market.ext.indicator import register_indicator_factories
-from utils.algos import all_equal, max_dist_indices, split_elements
 
 from stock_market_visualizer.app.signals.common import (
     get_sentiment_colors,

@@ -4,7 +4,7 @@ import uuid
 from http import HTTPStatus
 
 import httpx
-from utils.logging import get_logger
+from simputils.logging import get_logger
 
 from stock_market_visualizer.app.config import get_settings
 

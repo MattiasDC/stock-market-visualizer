@@ -4,7 +4,7 @@ import dash
 import dash_bootstrap_components as dbc
 from dash import html
 from dash_extensions.enrich import Input, Output, State
-from utils.logging import get_logger
+from simputils.logging import get_logger
 
 from stock_market_visualizer.app.signals.common import (
     SignalDataPlaceholderLayout,
