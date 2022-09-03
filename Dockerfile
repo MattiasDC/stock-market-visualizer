@@ -15,6 +15,7 @@ COPY pyproject.toml .
 COPY setup.cfg .
 
 COPY ./stock_market_visualizer ./stock_market_visualizer
+COPY ./default_configs ./default_configs
 
 RUN pip install -e . --no-cache-dir
 

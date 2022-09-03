@@ -13,7 +13,7 @@ class Settings(BaseSettings):
     port: int = os.getenv("PORT", 8000)
     ssl_keyfile: str = os.getenv("SSL_KEYFILE")
     ssl_certfile: str = os.getenv("SSL_CERTFILE")
-    api_url: AnyUrl = os.getenv("API_URL", "http://sme-api-smv")
+    api_url: AnyUrl = os.getenv("API_URL", "http://stock-market-engine")
     api_port: int = os.getenv("API_PORT", 8001)
     debug: bool = os.getenv("DEBUG", False)
     max_ticker_symbol_length: int = os.getenv("MAX_TICKER_SYMBOL_LENGTH", 10)
