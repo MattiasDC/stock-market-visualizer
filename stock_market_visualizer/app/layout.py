@@ -38,7 +38,10 @@ class Layout:
                                 dbc.Col(self.indicator_layout.get_layout()),
                             ]
                         ),
-                        dbc.Row(self.graph_layout.get_layout()),
+                        dbc.Row(
+                            self.graph_layout.get_layout(),
+                            style={"margin-bottom": "10px"},
+                        ),
                         dbc.Row(children=self.signal_detector_layout.get_layout()),
                     ]
                 ),

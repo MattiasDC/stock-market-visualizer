@@ -7,7 +7,6 @@ import plotly.graph_objects as go
 from dash import dcc
 from dash_extensions.enrich import Input, Output
 from dateutil.rrule import DAILY, FR, MO, TH, TU, WE, rrule
-from plotly.subplots import make_subplots
 from simputils.algos import all_equal, max_dist_indices, split_elements
 from stock_market.common.factory import Factory
 from stock_market.core import OHLC, Sentiment
@@ -111,6 +110,11 @@ class GraphLayout:
                 list(sentiment_signals_iter)
                 for _, sentiment_signals_iter in grouped_signals
             ]
+            if len(groups) > 0:
+                figure = figure.set_subplots(
+                    rows=2, cols=1, shared_xaxes=True, row_heights=[0.9, 0.1]
+                )
+                figure.update_yaxes(visible=False, col=1, row=2)
             for sentiment_signals in groups:
                 first = sentiment_signals[0]
                 sentiment = first.sentiment
@@ -159,9 +163,7 @@ class GraphLayout:
                         marker_symbol=get_sentiment_shape(sentiment),
                         marker_size=12,
                         marker_color=color_provider.get(sentiment),
-                    ),
-                    col=1,
-                    row=1,
+                    )
                 )
             return figure
 
@@ -178,7 +180,6 @@ class GraphLayout:
             else:
                 __add_signals(figure, i, signals, color_provider)
 
-        figure.update_yaxes(visible=False, col=1, row=2)
         return figure
 
     def __get_ticker_closes(self, engine):
@@ -211,25 +212,21 @@ class GraphLayout:
         for ticker, close in closes.items():
             figure.add_trace(
                 go.Scatter(x=close.dates, y=close.values, name=ticker, mode="lines"),
-                row=1,
-                col=1,
             )
 
         for ticker, close in closes.items():
             figure = self.__create_indicator_traces(indicators, ticker, close, figure)
-        return figure, len(closes)
+        return figure
 
     def __get_traces_and_layout(self, engine, indicators):
-        share_x_axes = len(engine.get_signals().signals) > 0
-        figure = make_subplots(
-            rows=2, cols=1, shared_xaxes=share_x_axes, row_heights=[0.9, 0.1]
-        )
+        figure = go.Figure()
         figure["layout"].update(margin=dict(l=0, r=0, b=0, t=0))
 
         ticker_closes = self.__get_ticker_closes(engine)
-        figure, nof_ticker_lines = self.__get_traces(ticker_closes, indicators, figure)
+        nof_ticker_lines = len(ticker_closes)
+        figure = self.__get_traces(ticker_closes, indicators, figure)
         if nof_ticker_lines > 1:
-            figure.update_yaxes(tickformat=",.1%", row=1, col=1)
+            figure.update_yaxes(tickformat=",.1%")
         if nof_ticker_lines > 0:
             figure = self.__get_signal_lines(engine, ticker_closes, figure)
         figure.update_layout(template="plotly_white")

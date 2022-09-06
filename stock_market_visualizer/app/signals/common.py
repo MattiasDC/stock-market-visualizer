@@ -68,7 +68,7 @@ def get_signal_detector(detector_id, engine):
 
 
 def get_random_detector_id(engine):
-    ids = [d.id for d in engine.get_signal_detectors()]
+    ids = [d.id for d in get_signal_detectors(engine)]
     return get_random_int_excluding(get_settings().max_id_generator, ids)
 
 
