@@ -2,6 +2,8 @@ import datetime
 import json
 from http import HTTPStatus
 
+import backoff
+import httpx
 from lru import LRU
 from stock_market.core import SignalSequence
 
@@ -27,6 +29,7 @@ class HttpRequester:
         self.base_url = base_url
         self.http_client = http_client
 
+    @backoff.on_exception(backoff.expo, (httpx.ConnectError))
     def request_json(self, **kwargs):
         kwargs_dict = dict(kwargs)
         kwargs_dict["url"] = self.base_url + kwargs_dict.pop("url")
