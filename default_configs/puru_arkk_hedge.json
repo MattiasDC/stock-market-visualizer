@@ -13,19 +13,19 @@
           "signal_detectors": [
             {
               "name": "Crossover",
-              "config": "{\"id\": 1853088, \"name\": \"SME50-Bear\", \"ticker\": \"\\\"ARKK\\\"\", \"responsive_indicator_getter\": {\"name\": \"Identity\", \"config\": \"\\\"\\\"\"}, \"unresponsive_indicator_getter\": {\"name\": \"ExponentialMovingAverage\", \"config\": \"50\"}, \"sentiment\": \"\\\"BEARISH\\\"\"}"
+              "config": "{\"id\": 1853088, \"name\": \"EMA50-Bear\", \"ticker\": \"\\\"ARKK\\\"\", \"responsive_indicator_getter\": {\"name\": \"Identity\", \"config\": \"\\\"\\\"\"}, \"unresponsive_indicator_getter\": {\"name\": \"ExponentialMovingAverage\", \"config\": \"50\"}, \"sentiment\": \"\\\"BEARISH\\\"\"}"
             },
             {
               "name": "Crossover",
-              "config": "{\"id\": 2843495, \"name\": \"SME5-7-Bullish\", \"ticker\": \"\\\"ARKK\\\"\", \"responsive_indicator_getter\": {\"name\": \"ExponentialMovingAverage\", \"config\": \"5\"}, \"unresponsive_indicator_getter\": {\"name\": \"ExponentialMovingAverage\", \"config\": \"7\"}, \"sentiment\": \"\\\"BULLISH\\\"\"}"
+              "config": "{\"id\": 2843495, \"name\": \"EMA5-7-Bullish\", \"ticker\": \"\\\"ARKK\\\"\", \"responsive_indicator_getter\": {\"name\": \"ExponentialMovingAverage\", \"config\": \"5\"}, \"unresponsive_indicator_getter\": {\"name\": \"ExponentialMovingAverage\", \"config\": \"7\"}, \"sentiment\": \"\\\"BULLISH\\\"\"}"
             },
             {
               "name": "Crossover",
-              "config": "{\"id\": 6643945, \"name\": \"SME5-7-Bear\", \"ticker\": \"\\\"ARKK\\\"\", \"responsive_indicator_getter\": {\"name\": \"ExponentialMovingAverage\", \"config\": \"5\"}, \"unresponsive_indicator_getter\": {\"name\": \"ExponentialMovingAverage\", \"config\": \"7\"}, \"sentiment\": \"\\\"BEARISH\\\"\"}"
+              "config": "{\"id\": 6643945, \"name\": \"EMA5-7-Bear\", \"ticker\": \"\\\"ARKK\\\"\", \"responsive_indicator_getter\": {\"name\": \"ExponentialMovingAverage\", \"config\": \"5\"}, \"unresponsive_indicator_getter\": {\"name\": \"ExponentialMovingAverage\", \"config\": \"7\"}, \"sentiment\": \"\\\"BEARISH\\\"\"}"
             },
             {
               "name": "Crossover",
-              "config": "{\"id\": 9914169, \"name\": \"SME50-Bullish\", \"ticker\": \"\\\"ARKK\\\"\", \"responsive_indicator_getter\": {\"name\": \"Identity\", \"config\": \"\\\"\\\"\"}, \"unresponsive_indicator_getter\": {\"name\": \"ExponentialMovingAverage\", \"config\": \"50\"}, \"sentiment\": \"\\\"BULLISH\\\"\"}"
+              "config": "{\"id\": 9914169, \"name\": \"EMA50-Bullish\", \"ticker\": \"\\\"ARKK\\\"\", \"responsive_indicator_getter\": {\"name\": \"Identity\", \"config\": \"\\\"\\\"\"}, \"unresponsive_indicator_getter\": {\"name\": \"ExponentialMovingAverage\", \"config\": \"50\"}, \"sentiment\": \"\\\"BULLISH\\\"\"}"
             }
           ],
           "machine": {

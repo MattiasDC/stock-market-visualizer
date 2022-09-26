@@ -1,4 +1,4 @@
-import httpx_cache
+import requests_cache
 import uvicorn as uvicorn
 from dash_extensions.enrich import DashProxy, MultiplexerTransform
 from fastapi import FastAPI
@@ -29,7 +29,11 @@ app.mount("", WSGIMiddleware(dash_app.server))
 async def startup_event():
     settings = get_settings()
 
-    app.state.http_client = httpx_cache.Client()
+    app.state.http_client = requests_cache.CachedSession(
+        cache=requests_cache.backends.SQLiteCache(),
+        allowable_methods=["GET", "POST"],
+        allowable_codes=[200, 203, 204, 300, 301, 308],
+    )
     app.state.redis = init_redis_pool()
     configuration_task = configure_default_configs(app.state.redis, settings)
     app.state.engine_api = StockMarketEngineApi(

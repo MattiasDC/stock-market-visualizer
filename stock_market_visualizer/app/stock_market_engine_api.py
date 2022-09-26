@@ -5,11 +5,13 @@ from http import HTTPStatus
 import backoff
 import httpx
 from lru import LRU
+from simputils.logging import get_logger
 from stock_market.core import SignalSequence
 
 from stock_market_visualizer.app.config import get_settings
 
 MAX_CACHE_SIZE = get_settings().max_api_endpoint_cache_size
+logger = get_logger(__name__)
 
 
 def get_create_engine_json(start_date, tickers, signal_detectors):
@@ -37,7 +39,11 @@ class HttpRequester:
         response = self.http_client.request(**kwargs_dict)
         if response.status_code != HTTPStatus.OK:
             return None
-        return response.json()
+
+        response = response.json()
+
+        # logger.debug(f"Query input: {kwargs_dict}\nQuery response: {response[:500]}")
+        return response
 
 
 class StockEngineProxy:

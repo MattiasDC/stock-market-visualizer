@@ -105,10 +105,6 @@ class DateLayout:
                 return dash.no_update
 
             end_date = min(end_date, dt.datetime.now().date())
-            end_date += dt.timedelta(days=1)  # Make exclusive
-
-            if end_date < min_end_date:
-                return dash.no_update
 
             tickers = self.ticker_layout.get_tickers(ticker_rows)
             signal_detectors = self.__get_signal_detectors(signal_detector_rows)
@@ -129,5 +125,7 @@ class DateLayout:
                 if engine is None:
                     return dash.no_update
 
-            new_engine = engine.update_engine(end_date)
+            new_engine = engine.update_engine(
+                end_date + dt.timedelta(days=1)
+            )  # Make exclusive
             return new_engine.engine_id, end_date

@@ -1,6 +1,7 @@
 from collections import Counter, defaultdict
 from itertools import groupby
 
+import dash
 import dash_bootstrap_components as dbc
 import pandas as pd
 import plotly.graph_objects as go
@@ -87,9 +88,7 @@ class GraphLayout:
                         y=trimmed_indicator_values.values,
                         name=trimmed_indicator_values.name,
                         mode="lines",
-                    ),
-                    row=1,
-                    col=1,
+                    )
                 )
 
         return figure
@@ -241,4 +240,6 @@ class GraphLayout:
         def change(rows, engine_id):
             indicators = self.__get_configured_indicators(rows)
             engine = engine_api.get_engine(engine_id)
+            if engine is None:
+                return dash.no_update
             return self.__get_traces_and_layout(engine, indicators)

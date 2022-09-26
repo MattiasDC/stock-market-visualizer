@@ -4,7 +4,7 @@ version: '3.7'
 services:
   stock-market-visualizer:
     container_name: stock-market-visualizer
-    image: xelicon/stock-market-visualizer:0.0.2
+    image: xelicon/stock-market-visualizer:latest-dev
     command: python stock_market_visualizer/app/main.py
     ports:
       - 80:80
@@ -21,7 +21,8 @@ services:
 
   stock-market-engine:
     container_name: sme-api-smv
-    image: xelicon/stock-market-engine:0.0.3
+    image: xelicon/stock-market-engine:latest-dev
+    # yamllint disable-line rule:line-length
     command: uvicorn stock_market_engine.main:app --host 0.0.0.0 --port 8001 --lifespan=on --log-level warning
     ports:
       - 8001:8001
@@ -36,7 +37,8 @@ services:
 
   stock-info-api:
     container_name: stock-info-api-smv
-    image: xelicon/stock-info-api:0.0.3
+    image: xelicon/stock-info-api:latest-dev
+    # yamllint disable-line rule:line-length
     command: uvicorn stock_info_api.main:app --host 0.0.0.0 --port 8002 --lifespan=on --log-level warning
     ports:
       - 8002:8002
