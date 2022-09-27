@@ -116,7 +116,7 @@ def configure_default_engine_view(engine_id, redis, engine_config, view_config) 
         view_config["engine_id"],
         engine_config["stock_market"]["start_date"],
         view_config["end_date"],
-        [],
+        view_config["indicators"],
         bool_to_list(view_config["show_ticker_table"]),
         bool_to_list(view_config["show_indicator_table"]),
         bool_to_list(view_config["show_signal_table"]),

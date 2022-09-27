@@ -87,8 +87,8 @@
             ],
             "models": [
               {
-                "state": "2378401",
-                "name": "140292491125712",
+                "state": "8171938",
+                "name": "Model",
                 "class-name": "stock_market.ext.signal.graph_signal_detector.Model"
               }
             ]

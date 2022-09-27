@@ -101,7 +101,6 @@ class RestoreableStateLayout:
                 show_indicator_table,
                 show_signal_table,
             )
-            print(indicators, flush=True)
             url = URL(url)
             splitted_url = str(url).split("engine/")
             assert 0 < len(splitted_url) <= 2

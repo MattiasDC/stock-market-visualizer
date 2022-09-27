@@ -3,5 +3,14 @@
 	"last_x_days": 365,
 	"show_ticker_table": false,
 	"show_indicator_table": false,
-	"show_signal_table": false
+	"show_signal_table": false,
+	"indicators": [{"indicator-col": "EMA(5)",
+					"ticker-col": "ARKK",
+					"indicator": {"name": "ExponentialMovingAverage", "config": "5"}},
+				   {"indicator-col": "EMA(7)",
+				   	"ticker-col": "ARKK",
+				   	"indicator": {"name": "ExponentialMovingAverage", "config": "7"}},
+				   {"indicator-col": "EMA(50)",
+				   	"ticker-col": "ARKK",
+				   	"indicator": {"name": "ExponentialMovingAverage", "config": "50"}}]
 }

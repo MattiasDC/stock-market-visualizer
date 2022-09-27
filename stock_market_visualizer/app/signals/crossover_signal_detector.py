@@ -214,7 +214,7 @@ class CrossoverDetectorHandler(TickerDetectorHandler):
         if engine is None:
             return engine_id
 
-        new_engine_id = engine.add_signal_detector(
+        new_engine = engine.add_signal_detector(
             {
                 "static_name": self.name(),
                 "config": json.dumps(
@@ -229,7 +229,7 @@ class CrossoverDetectorHandler(TickerDetectorHandler):
                 ),
             },
         )
-        return new_engine_id
+        return new_engine.engine_id
 
     def get_id(self, config):
         return json.loads(config)["id"]
