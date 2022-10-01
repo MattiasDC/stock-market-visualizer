@@ -21,7 +21,7 @@ services:
 
   stock-market-engine:
     container_name: sme-api-smv
-    image: xelicon/stock-market-engine:latest-dev
+    image: xelicon/stock-market-engine:0.0.5
     # yamllint disable-line rule:line-length
     command: uvicorn stock_market_engine.main:app --host 0.0.0.0 --port 8001 --lifespan=on --log-level warning
     ports:
@@ -37,7 +37,7 @@ services:
 
   stock-info-api:
     container_name: stock-info-api-smv
-    image: xelicon/stock-info-api:latest-dev
+    image: xelicon/stock-info-api:0.0.3
     # yamllint disable-line rule:line-length
     command: uvicorn stock_info_api.main:app --host 0.0.0.0 --port 8002 --lifespan=on --log-level warning
     ports:

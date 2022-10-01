@@ -85,13 +85,7 @@
                 "name": "3820248"
               }
             ],
-            "models": [
-              {
-                "state": "8171938",
-                "name": "Model",
-                "class-name": "stock_market.ext.signal.graph_signal_detector.Model"
-              }
-            ]
+            "models": []
           }
         }
       }
