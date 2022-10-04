@@ -10,6 +10,8 @@ from stock_market_visualizer.app.layout import Layout
 from stock_market_visualizer.app.redis_helper import init_redis_pool
 from stock_market_visualizer.app.stock_market_engine_api import StockMarketEngineApi
 
+settings = get_settings()
+
 layout = Layout()
 dash_app = DashProxy(
     __name__,
@@ -19,7 +21,38 @@ dash_app = DashProxy(
     external_stylesheets=layout.get_themes(),
     assets_folder="./assets",
 )
-dash_app.title = get_settings().title
+
+dash_app.index_string = """
+<!DOCTYPE html>
+<html>
+    <head>
+        <!-- Google tag (gtag.js) -->
+        <script async src="https://www.googletagmanager.com/gtag/js?id={}"></script>
+        <script>
+          window.dataLayer = window.dataLayer || [];
+          function gtag(){{dataLayer.push(arguments);}}
+          gtag('js', new Date());
+          gtag('config', '{}');
+        </script>
+        {{%metas%}}
+        <title>{{%title%}}</title>
+        {{%favicon%}}
+        {{%css%}}
+    </head>
+    <body>
+        {{%app_entry%}}
+        <footer>
+            {{%config%}}
+            {{%scripts%}}
+            {{%renderer%}}
+        </footer>
+    </body>
+</html>
+""".format(
+    settings.gtag, settings.gtag
+)
+
+dash_app.title = settings.title
 
 app = FastAPI(title="Stock Market Visualizer")
 app.mount("", WSGIMiddleware(dash_app.server))
@@ -27,7 +60,6 @@ app.mount("", WSGIMiddleware(dash_app.server))
 
 @app.on_event("startup")
 async def startup_event():
-    settings = get_settings()
 
     app.state.http_client = requests_cache.CachedSession(
         cache=requests_cache.backends.SQLiteCache(),
@@ -50,7 +82,6 @@ async def shutdown_event():
 
 
 if __name__ == "__main__":
-    settings = get_settings()
     if settings.debug:
         dash_app.enable_dev_tools(debug=True, dev_tools_hot_reload=True)
 
