@@ -64,4 +64,4 @@ class Layout:
         self.ticker_layout.register_callbacks(app, engine_api)
         self.indicator_layout.register_callbacks(app)
         self.signal_detector_layout.register_callbacks(app, engine_api)
-        self.restoreable_state_layout.register_callbacks(app, redis)
+        self.restoreable_state_layout.register_callbacks(app, engine_api, redis)

@@ -33,7 +33,7 @@ class CheckableTableLayout:
                 dcc.Checklist(
                     id=self.show_table,
                     options=[
-                        {"label": f"Show {self.name.capitalize()}s", "value": True}
+                        {"label": f" Show {self.name.capitalize()}s", "value": True}
                     ],
                     value=[True],
                     style={"margin-top": 5},

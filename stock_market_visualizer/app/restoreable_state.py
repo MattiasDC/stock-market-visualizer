@@ -5,7 +5,11 @@ from dash import dcc
 from dash_extensions.enrich import Input, Output, State
 from httpx import URL
 
-from stock_market_visualizer.app.config_store import ConfigStore
+from stock_market_visualizer.app.config import get_settings
+from stock_market_visualizer.app.config_store import (
+    ConfigStore,
+    configure_default_configs,
+)
 
 
 class RestoreableStateLayout:
@@ -24,11 +28,12 @@ class RestoreableStateLayout:
     def get_layout(self):
         return [self.location, self.restoreable_state]
 
-    def register_callbacks(self, app, redis):
+    def register_callbacks(self, app, api, redis):
         @app.callback(Output(*self.get_restoreable_state()), Input(*self.get_url()))
         def update_state_from_url(url):
             url_splitted = URL(url).path.split("/engine/")
             if len(url_splitted) < 2:
+                configure_default_configs(api, redis, get_settings())
                 return ConfigStore(redis).get(ConfigStore.DEFAULT_VIEW_CONFIG_KEY)
             return url_splitted[1]
 

@@ -79,7 +79,6 @@ class DateLayout:
 
         @app.callback(
             Output(*self.engine_layout.get_id()),
-            Output(*self.get_end_date()),
             Input(*self.get_start_date()),
             Input(*self.get_end_date()),
             State(*self.ticker_layout.get_ticker_table()),
@@ -128,4 +127,4 @@ class DateLayout:
             new_engine = engine.update_engine(
                 end_date + dt.timedelta(days=1)
             )  # Make exclusive
-            return new_engine.engine_id, end_date
+            return new_engine.engine_id

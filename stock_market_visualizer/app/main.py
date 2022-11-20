@@ -5,7 +5,6 @@ from fastapi import FastAPI
 from starlette.middleware.wsgi import WSGIMiddleware
 
 from stock_market_visualizer.app.config import get_settings
-from stock_market_visualizer.app.config_store import configure_default_configs
 from stock_market_visualizer.app.layout import Layout
 from stock_market_visualizer.app.redis_helper import init_redis_pool
 from stock_market_visualizer.app.stock_market_engine_api import StockMarketEngineApi
@@ -67,13 +66,11 @@ async def startup_event():
         allowable_codes=[200, 203, 204, 300, 301, 308],
     )
     app.state.redis = init_redis_pool()
-    configuration_task = configure_default_configs(app.state.redis, settings)
     app.state.engine_api = StockMarketEngineApi(
         settings.api_url, settings.api_port, app.state.http_client
     )
     dash_app.layout = layout.get_layout()
     layout.register_callbacks(dash_app, app.state.engine_api, app.state.redis)
-    await configuration_task
 
 
 @app.on_event("shutdown")

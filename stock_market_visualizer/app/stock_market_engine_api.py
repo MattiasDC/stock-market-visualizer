@@ -37,12 +37,16 @@ class HttpRequester:
         kwargs_dict["url"] = self.base_url + kwargs_dict.pop("url")
 
         response = self.http_client.request(**kwargs_dict)
-        if response.status_code != HTTPStatus.OK:
+        code = response.status_code
+        if code != HTTPStatus.OK:
+            if code >= 400:
+                logger.warning(
+                    f"Encountered error code '{code}' for request '{kwargs_dict}'."
+                    f" Response: {response.text[:500]}"
+                )
             return None
 
         response = response.json()
-
-        # logger.debug(f"Query input: {kwargs_dict}\nQuery response: {response[:500]}")
         return response
 
 
@@ -208,8 +212,11 @@ class StockMarketEngineApi:
 
     def create_engine(self, start_date, tickers, signal_detectors):
         data = get_create_engine_json(start_date, tickers, signal_detectors)
+        return self.create_engine_from_json(data)
+
+    def create_engine_from_json(self, json_config):
         result = self.http_requester.request_json(
-            method="POST", url=self.get_create_path(), data=data
+            method="POST", url=self.get_create_path(), data=json_config
         )
         return StockEngineProxy(result, self)
 
