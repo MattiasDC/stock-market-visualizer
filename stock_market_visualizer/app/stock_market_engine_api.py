@@ -45,7 +45,6 @@ class HttpRequester:
                     f" Response: {response.text[:500]}"
                 )
             return None
-
         response = response.json()
         return response
 

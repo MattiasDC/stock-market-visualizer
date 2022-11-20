@@ -59,9 +59,10 @@ app.mount("", WSGIMiddleware(dash_app.server))
 
 @app.on_event("startup")
 async def startup_event():
-
     app.state.http_client = requests_cache.CachedSession(
-        cache=requests_cache.backends.SQLiteCache(),
+        backend=requests_cache.backends.RedisCache(
+            host=settings.redis_url, port=settings.redis_port, db=settings.redis_db
+        ),
         allowable_methods=["GET", "POST"],
         allowable_codes=[200, 203, 204, 300, 301, 308],
     )

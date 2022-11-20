@@ -9,7 +9,8 @@ global_settings = Settings()
 
 def init_redis_pool():
     r = redis.from_url(
-        global_settings.redis_url,
+        url="redis://" + global_settings.redis_url,
+        port=global_settings.redis_port,
         encoding="utf-8",
         db=global_settings.redis_db,
         decode_responses=True,

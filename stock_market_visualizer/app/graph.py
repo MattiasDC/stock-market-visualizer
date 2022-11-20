@@ -228,7 +228,7 @@ class GraphLayout:
             figure.update_yaxes(tickformat=",.1%")
         if nof_ticker_lines > 0:
             figure = self.__get_signal_lines(engine, ticker_closes, figure)
-        figure.update_layout(template="plotly_white")
+        figure.update_layout(template="plotly_white", legend={"orientation": "h"})
         return figure
 
     def register_callbacks(self, app, engine_api):

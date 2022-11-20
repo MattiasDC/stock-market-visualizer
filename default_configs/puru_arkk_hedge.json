@@ -9,7 +9,7 @@
         "static_name": "Graph",
         "config": {
           "id": 6759008,
-          "name": "Puru ARKK Hedge",
+          "name": "Hedge",
           "signal_detectors": [
             {
               "name": "Crossover",

@@ -20,7 +20,7 @@ class Settings(BaseSettings):
     update_interval: int = os.getenv("UPDATE_INTERVAL_SECONDS", 5 * 60)
     max_api_endpoint_cache_size: int = os.getenv("MAX_API_ENDPOINT_CACHE_SIZE", 10000)
     max_id_generator: int = os.getenv("MAX_ID_GENERATOR", 10000000)
-    redis_url: AnyUrl = os.getenv("REDIS_URL", "redis://redis")
+    redis_url: str = os.getenv("REDIS_URL", "redis")
     redis_port: int = os.getenv("REDIS_PORT", 6379)
     redis_db: int = os.getenv("REDIS_DB")
     redis_restoreable_state_expiration_time: dt.timedelta = dt.timedelta(

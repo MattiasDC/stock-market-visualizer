@@ -83,7 +83,6 @@ class DateLayout:
             Input(*self.get_end_date()),
             State(*self.ticker_layout.get_ticker_table()),
             State(*self.signal_layout.signal_detector_table.get_table()),
-            State(self.end_date_picker, "min_date_allowed"),
             State(*self.engine_layout.get_id()),
         )
         def update_engine(
@@ -91,11 +90,9 @@ class DateLayout:
             end_date,
             ticker_rows,
             signal_detector_rows,
-            min_end_date,
             engine_id,
         ):
             start_date = from_sdate(start_date)
-            min_end_date = from_sdate(min_end_date)
             end_date = from_sdate(end_date)
 
             if start_date is None:
