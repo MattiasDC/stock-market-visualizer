@@ -30,7 +30,7 @@ class DateLayout:
         return dbc.Col(
             dbc.Container(
                 [
-                    html.P("Start"),
+                    html.P("Start", style={"margin-bottom": 0}),
                     dcc.DatePickerSingle(
                         id=self.start_date_picker,
                         min_date_allowed=self.earliest_start,
@@ -47,7 +47,7 @@ class DateLayout:
         return dbc.Col(
             dbc.Container(
                 [
-                    html.P("End"),
+                    html.P("End", style={"margin-bottom": 0}),
                     dcc.DatePickerSingle(
                         id=self.end_date_picker,
                         min_date_allowed=self.earliest_start + dt.timedelta(days=1),

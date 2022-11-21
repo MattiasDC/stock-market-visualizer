@@ -31,18 +31,14 @@ class Layout:
                 self.header_layout.get_layout(),
                 dbc.Container(
                     [
-                        dbc.Row(
-                            self.date_layout.get_layout()
-                            + [
-                                dbc.Col(self.ticker_layout.get_layout()),
-                                dbc.Col(self.indicator_layout.get_layout()),
-                            ]
-                        ),
+                        dbc.Row(self.date_layout.get_layout()),
                         dbc.Row(
                             self.graph_layout.get_layout(),
                             style={"margin-bottom": "10px"},
                         ),
-                        dbc.Row(children=self.signal_detector_layout.get_layout()),
+                        dbc.Row(dbc.Col(self.ticker_layout.get_layout())),
+                        dbc.Row(dbc.Col(self.indicator_layout.get_layout())),
+                        dbc.Row(self.signal_detector_layout.get_layout()),
                     ]
                 ),
                 self.engine_layout.get_layout(),
